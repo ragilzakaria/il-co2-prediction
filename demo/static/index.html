@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CO₂ Solubility Prediction Demo</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 CO₂ Solubility Prediction</h1>
+            <p class="subtitle">Machine Learning Model for Ionic Liquids</p>
+        </header>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2>Input Parameters</h2>
+                
+                <form id="predictionForm">
+                    <div class="form-group">
+                        <h3>Experimental Conditions</h3>
+                        <div class="input-row">
+                            <label>
+                                Temperature (K)
+                                <input type="number" id="Temperature_K" value="298.15" step="0.01" min="273" max="400">
+                            </label>
+                            <label>
+                                Pressure (kPa)
+                                <input type="number" id="Pressure_kPa" value="1000" step="1" min="100" max="10000">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <h3>Cation Properties ([BMIM] defaults)</h3>
+                        <div class="input-grid">
+                            <label>
+                                Energy (Hartree)
+                                <input type="number" id="cation_Energy_Hartree" value="-423.0426" step="0.0001">
+                            </label>
+                            <label>
+                                HOMO (Eh)
+                                <input type="number" id="cation_HOMO_Eh" value="-0.416496" step="0.0001">
+                            </label>
+                            <label>
+                                LUMO (Eh)
+                                <input type="number" id="cation_LUMO_Eh" value="-0.216006" step="0.0001">
+                            </label>
+                            <label>
+                                HOMO-LUMO Gap (Eh)
+                                <input type="number" id="cation_HOMO_LUMO_Gap_Eh" value="0.20049" step="0.0001">
+                            </label>
+                            <label>
+                                Dipole Moment (Debye)
+                                <input type="number" id="cation_Dipole_Moment_Debye" value="1.9587" step="0.0001">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <h3>Anion Properties</h3>
+                        <div class="input-grid">
+                            <label>
+                                Energy (Hartree)
+                                <input type="number" id="anion_Energy_Hartree" value="-856.0656" step="0.0001">
+                            </label>
+                            <label>
+                                HOMO (Eh)
+                                <input type="number" id="anion_HOMO_Eh" value="0.003031" step="0.0001">
+                            </label>
+                            <label>
+                                LUMO (Eh)
+                                <input type="number" id="anion_LUMO_Eh" value="0.053606" step="0.0001">
+                            </label>
+                            <label>
+                                HOMO-LUMO Gap (Eh)
+                                <input type="number" id="anion_HOMO_LUMO_Gap_Eh" value="0.050575" step="0.0001">
+                            </label>
+                            <label>
+                                Dipole Moment (Debye)
+                                <input type="number" id="anion_Dipole_Moment_Debye" value="13.4882" step="0.0001">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <h3>Atom Counts</h3>
+                        <div class="atom-counts">
+                            <div class="atom-group">
+                                <h4>Cation Atoms</h4>
+                                <div class="atom-selector">
+                                    <select id="cation_atom_select" class="atom-dropdown">
+                                        <option value="">Select atom to add...</option>
+                                        <option value="H">H (Hydrogen)</option>
+                                        <option value="C">C (Carbon)</option>
+                                        <option value="N">N (Nitrogen)</option>
+                                        <option value="O">O (Oxygen)</option>
+                                        <option value="F">F (Fluorine)</option>
+                                        <option value="P">P (Phosphorus)</option>
+                                        <option value="S">S (Sulfur)</option>
+                                        <option value="Cl">Cl (Chlorine)</option>
+                                        <option value="Br">Br (Bromine)</option>
+                                        <option value="I">I (Iodine)</option>
+                                        <option value="B">B (Boron)</option>
+                                        <option value="Si">Si (Silicon)</option>
+                                        <option value="Se">Se (Selenium)</option>
+                                        <option value="Te">Te (Tellurium)</option>
+                                        <option value="Li">Li (Lithium)</option>
+                                        <option value="Na">Na (Sodium)</option>
+                                        <option value="K">K (Potassium)</option>
+                                        <option value="Rb">Rb (Rubidium)</option>
+                                        <option value="Cs">Cs (Cesium)</option>
+                                    </select>
+                                    <button type="button" id="add_cation_atom" class="btn-add-atom">+ Add</button>
+                                </div>
+                                <div id="cation_atom_inputs" class="atom-inputs">
+                                    <!-- Dynamically generated inputs will appear here -->
+                                </div>
+                            </div>
+                            <div class="atom-group">
+                                <h4>Anion Atoms</h4>
+                                <div class="atom-selector">
+                                    <select id="anion_atom_select" class="atom-dropdown">
+                                        <option value="">Select atom to add...</option>
+                                        <option value="H">H (Hydrogen)</option>
+                                        <option value="C">C (Carbon)</option>
+                                        <option value="N">N (Nitrogen)</option>
+                                        <option value="O">O (Oxygen)</option>
+                                        <option value="F">F (Fluorine)</option>
+                                        <option value="P">P (Phosphorus)</option>
+                                        <option value="S">S (Sulfur)</option>
+                                        <option value="Cl">Cl (Chlorine)</option>
+                                        <option value="Br">Br (Bromine)</option>
+                                        <option value="I">I (Iodine)</option>
+                                        <option value="B">B (Boron)</option>
+                                        <option value="Si">Si (Silicon)</option>
+                                        <option value="Se">Se (Selenium)</option>
+                                        <option value="Te">Te (Tellurium)</option>
+                                        <option value="Li">Li (Lithium)</option>
+                                        <option value="Na">Na (Sodium)</option>
+                                        <option value="K">K (Potassium)</option>
+                                        <option value="Rb">Rb (Rubidium)</option>
+                                        <option value="Cs">Cs (Cesium)</option>
+                                    </select>
+                                    <button type="button" id="add_anion_atom" class="btn-add-atom">+ Add</button>
+                                </div>
+                                <div id="anion_atom_inputs" class="atom-inputs">
+                                    <!-- Dynamically generated inputs will appear here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" id="predictBtn" class="btn btn-primary">
+                            🧪 Predict CO₂ Solubility
+                        </button>
+                        <button type="button" id="resetBtn" class="btn btn-secondary">
+                            🔄 Reset to Defaults
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="result-section">
+                <h2>Prediction Result</h2>
+                <div id="resultCard" class="result-card">
+                    <div class="result-placeholder">
+                        <p>👆 Enter parameters and click "Predict" to see results</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>📊 Model Information</h3>
+                    <ul>
+                        <li><strong>Model Type:</strong> Random Forest Regressor</li>
+                        <li><strong>Features:</strong> 248 quantum descriptors</li>
+                        <li><strong>Target:</strong> CO₂ solubility (mole fraction)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with scikit-learn Random Forest | Trained on experimental data</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
+
