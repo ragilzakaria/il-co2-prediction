@@ -10,7 +10,8 @@
 paper/
 ├── main.tex                  # IEEEtran, one column, 11pt, A4
 ├── references.bib
-├── IEEEtran.cls / IEEEtran.bst
+├── IEEEtran.cls / IEEEtran.bst   # one-column page layout
+├── achemso.sty / achemso.bst / natmove.sty  # ACS citation style (superscript numbers)
 ├── sections/
 │   ├── 01_introduction.tex
 │   ├── 02_data.tex
