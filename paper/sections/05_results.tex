@@ -1,0 +1,40 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{Model comparison}
+Table~\ref{tab:metrics} and Fig.~\ref{fig:parity} show the test-set performance. The three non-linear models all reach $R^2 > 0.96$, with Random Forest best on every metric. Its predictions follow the parity line from zero to about 0.85 mole fraction, with a few mid-range outliers. Gradient Boosting shows slightly more scatter. The neural network has a small systematic bias: it under-predicts above $\xco \approx 0.6$ and over-predicts near zero. Ridge regression fails at high solubility, where the dependence on pressure is strongly non-linear, and its predictions fan out above $\xco \approx 0.5$.
+
+\begin{table}[t]
+\caption{Test-set performance of the four models (random 80/20 split, 2,252 test points). MAE and RMSE are in mole fraction. Training times are for one fit on a laptop CPU.}
+\label{tab:metrics}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & $R^2$ & \textbf{MAE} & \textbf{RMSE} & \textbf{Training time (s)} \\
+\midrule
+Random Forest & 0.9853 & 0.0167 & 0.0275 & 1.0 \\
+Gradient Boosting & 0.9729 & 0.0257 & 0.0374 & 1.1 \\
+Neural network & 0.9656 & 0.0346 & 0.0422 & 19.7 \\
+Ridge regression & 0.5906 & 0.1164 & 0.1455 & 0.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/fig_parity_thesis.png}
+\caption{Predicted against experimental \co{} solubility on the test set for the four models. The dashed line marks perfect agreement.}
+\label{fig:parity}
+\end{figure}
+
+The neural-network scores vary between runs because its training is not seeded: three runs gave $R^2$ of 0.9616, 0.9656 and 0.9687. The tree models are deterministic for the fixed seed.
+
+\subsection{Feature importance}
+Fig.~\ref{fig:importance} shows permutation importances for Random Forest and Gradient Boosting, excluding atom counts. Pressure dominates: shuffling it lowers $R^2$ by about 1.9, which means predictions become worse than predicting the mean. Temperature follows at about 0.19. Among the DFT descriptors, the anion total energy is clearly the most important (0.13 for Random Forest, 0.07 for Gradient Boosting). It is followed at an order of magnitude lower by the cation total energy and the anion HOMO and LUMO energies. The dipole moments and HOMO--LUMO gaps contribute least. For the linear Ridge model the order is similar after pressure and temperature, but the cation LUMO ranks second among the descriptors. The large weight of the anion descriptors agrees with the known dominant role of the anion in physical \co{} solubility \cite{cadena2004why, anthony2005anion}. However, the total energy mainly scales with the size and elemental composition of an ion, so it may act as an identifier of the ion rather than a measure of its interaction with \co{} (see Section~\ref{sec:issues}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_importance.pdf}
+\caption{Permutation importance of temperature, pressure and the ten DFT descriptors for Random Forest and Gradient Boosting (test set, 10 repeats, logarithmic scale). Atom counts are omitted.}
+\label{fig:importance}
+\end{figure}

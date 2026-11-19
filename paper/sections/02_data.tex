@@ -1,0 +1,38 @@
+\section{Experimental Data}
+\label{sec:data}
+
+\subsection{Training dataset}
+The training data come from two supplementary tables (Tables S5 and S6) of a published compilation of \co{} solubility in ILs \tbc{citation of the source of \path{rawdata.xlsx} to be added}. Table S5 gives temperature, pressure in kPa and the \co{} mole fraction $\xco$. Table S6 gives pressure in bar together with fugacities and UNIFAC activity coefficients, of which only $T$, $P$ and $\xco$ were kept. Pressures were converted to kPa and the two tables were merged into 12,005 points (\path{notebooks/02-data-preprocessing.ipynb}).
+
+Each IL is identified by a cation and an anion abbreviation. The abbreviations were mapped to full ion names (84 unique ions). After merging with the DFT descriptors (Section~\ref{sec:comp}), points whose ions had no successful calculation were dropped. This left the final training set of 11,256 points (\path{data/final_model_dataset_v3.csv}), summarised in Table~\ref{tab:dataset} and Fig.~\ref{fig:dataset}. The set is dominated by imidazolium cations, and the number of points per IL is uneven, from 1 to 871.
+
+\begin{table}[t]
+\caption{Training dataset (used for all models in this manuscript) and the rebuilt referenced dataset (not yet used for training).}
+\label{tab:dataset}
+\centering
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{Training set (v3)} & \textbf{Referenced set} \\
+\midrule
+Data points & 11,256 & 12,297 \\
+Ionic liquids & 113 & 109 \\
+Cations / anions & 50 / 26 & 39 / 22 \\
+Temperature (K) & 243.2--453.2 & 228.2--450.5 \\
+Pressure & 0.8~kPa--50.0~MPa & 0.1~kPa--99.0~MPa \\
+$\xco$ & 0.00006--0.952 & 0.000004--0.9999 \\
+Points per IL (median) & 52 & 68 \\
+Source references & not recorded per point & 160 publications with DOI \\
+Measurement method per point & no & yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/fig_dataset.pdf}
+\caption{Training dataset. (a) \co{} mole fraction against pressure, coloured by temperature. (b) Number of data points for each of the 113 ILs, ranked.}
+\label{fig:dataset}
+\end{figure}
+
+\subsection{Referenced dataset}
+Because the per-point sources were not recorded in the original tables, the dataset was rebuilt from NIST ILThermo \cite{dong2007ilthermo}. The rebuild was restricted to ILs whose cation and anion both have DFT descriptors (\path{data/extract_referenced_dataset.py}). Molality and mass-fraction data were converted to mole fraction using molar masses computed from the SMILES strings, and exact duplicates were removed. The result has 12,297 points for 109 ILs from 160 publications (2001--2025). Each point carries the citation, DOI and experimental method; static closed-cell measurements make up 35\% of the points and gravimetric methods about 20\%. The bibliography is in \path{data/dataset_references.bib}. This dataset is merged with the descriptors (\path{data/final_referenced_model_dataset.csv}) but has not yet been used to train the models reported below.

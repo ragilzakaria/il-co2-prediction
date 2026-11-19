@@ -1,0 +1,47 @@
+\section{Computational Methods}
+\label{sec:comp}
+
+Fig.~\ref{fig:pipeline} summarises the workflow from ion names to model inputs.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum height=1.1cm, text width=2.35cm, fill=blue!4},
+  dat/.style={box, fill=orange!8},
+  arr/.style={-{Stealth[length=2mm]}, thick}]
+\node[box] (names) {Ion names\\(84 ions)};
+\node[box, right=0.45cm of names] (smiles) {SMILES\\PubChem + manual};
+\node[box, right=0.45cm of smiles] (geom) {3D structure\\RDKit ETKDGv3\\+ UFF};
+\node[box, right=0.45cm of geom] (dft) {ORCA 6.0\\r2SCAN-3c\\Opt + Freq};
+\node[box, below=0.9cm of dft] (desc) {Descriptors\\$E$, HOMO, LUMO,\\gap, dipole};
+\node[box, left=0.45cm of desc] (counts) {Atom counts\\(per element)};
+\node[dat, left=0.45cm of counts] (exp) {Experimental\\$T$, $P$, $\xco$\\(11,256 points)};
+\node[box, left=0.45cm of exp, fill=green!6] (ml) {ML models\\248 features};
+\draw[arr] (names) -- (smiles);
+\draw[arr] (smiles) -- (geom);
+\draw[arr] (geom) -- (dft);
+\draw[arr] (dft) -- (desc);
+\draw[arr] (desc) -- (counts);
+\draw[arr] (counts) -- (exp);
+\draw[arr] (exp) -- (ml);
+\end{tikzpicture}
+\caption{Workflow from ion names to the 248-feature model input. Descriptors are computed for each isolated ion and joined to the experimental points by cation and anion.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Structures}
+SMILES strings for the 84 ions were retrieved from PubChem \cite{kim2023pubchem} by ion name; ions that PubChem did not resolve were entered by hand (\path{data/ions_with_smiles.csv}). Three-dimensional structures were generated with RDKit \cite{rdkit} using the ETKDGv3 embedding \cite{wang2020improving}, followed by a UFF force-field optimisation \cite{rappe1992uff}. One conformer was generated per ion. Structures are stored in \path{structures/}.
+
+\subsection{DFT calculations}
+Each ion was calculated in isolation in the gas phase with ORCA 6.0 \cite{neese2022orca}. The method was the r2SCAN-3c composite \cite{grimme2021r2scan}, with a geometry optimisation followed by a frequency calculation (\texttt{! r2SCAN-3c Opt Freq}). Charges were $+1$ for cations and $-1$ for anions, with singlet multiplicity. Outputs are in \path{calculations/ions/}. Of the 84 ions, 78 finished normally; the six that did not are not represented in the training data.
+
+\subsection{Descriptors}
+Five properties were taken from each ion's output:
+\begin{itemize}
+    \item total electronic energy $E$ (Hartree);
+    \item energy of the highest occupied molecular orbital, $E_{\mathrm{HOMO}}$ (Hartree);
+    \item energy of the lowest unoccupied molecular orbital, $E_{\mathrm{LUMO}}$ (Hartree);
+    \item HOMO--LUMO gap, $E_{\mathrm{LUMO}} - E_{\mathrm{HOMO}}$;
+    \item dipole moment (Debye).
+\end{itemize}
+These were extracted with a parser in \path{notebooks/07-descriptor-extraction.ipynb}. Elemental atom counts were added for each ion, one column per element of the periodic table (\path{notebooks/09-add-atom-counts.ipynb}). The descriptors of the cation and the anion were joined to every experimental point of the corresponding IL. With temperature and pressure this gives 248 feature columns: 2 state variables, 10 DFT descriptors and 236 atom-count columns, of which 15 are non-zero for at least one ion (B, C, F, H, N, O, P and S in anions; C, F, H, N, O, P and S in cations).

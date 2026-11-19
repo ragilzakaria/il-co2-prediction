@@ -1,0 +1,62 @@
+\documentclass[journal,onecolumn,11pt,a4paper,draftclsnofoot]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{microtype}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[hyphens]{url}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\renewcommand{\UrlBreaks}{\do\/\do\-\do\_\do\.}
+\newcommand{\co}{CO$_2$}
+\newcommand{\xco}{x_{\mathrm{CO_2}}}
+\newcommand{\tbc}[1]{\textcolor{red}{[#1]}}
+
+\begin{document}
+
+\title{Machine-Learning Prediction of CO$_2$ Solubility in Ionic Liquids from DFT Ion Descriptors: Current State of the Work}
+
+\author{Maulana~Ragil~Zakariah%
+\thanks{M.~R.~Zakariah is a Research Assistant intern in Computational Chemistry at the National Research and Innovation Agency (BRIN), Indonesia \tbc{research centre and supervisor to be added}.}%
+\thanks{This is an internal working manuscript. It describes the work completed so far and the open issues, as a basis for planning the next stage at BRIN.}}
+
+\markboth{Internal working manuscript, BRIN, 2026}%
+{Zakariah: ML Prediction of CO$_2$ Solubility in Ionic Liquids}
+
+\maketitle
+
+\begin{abstract}
+Ionic liquids (ILs) are candidate solvents for \co{} capture, but measuring \co{} solubility for every possible cation--anion pair is not feasible. This manuscript reports the current state of a workflow that predicts \co{} solubility in ILs from quantum-chemical descriptors of the individual ions. An experimental dataset of 11,256 solubility points for 113 ILs (50 cations, 26 anions) covers 243--453~K and up to 50~MPa. Each ion was converted from its name to a SMILES string and then to a 3D structure with RDKit, and optimised with r2SCAN-3c in ORCA 6.0. Five descriptors per ion were extracted: total energy, HOMO and LUMO energies, HOMO--LUMO gap and dipole moment. Together with temperature, pressure and elemental atom counts they give 248 input features. Four regressors were trained on a random 80/20 split. Random Forest gave the best test-set performance ($R^2 = 0.985$, MAE $= 0.017$ in mole fraction), followed by Gradient Boosting (0.973), a neural network (0.966) and Ridge regression (0.591). Permutation importance ranks pressure first, temperature second and the anion total energy third. The trained model was used to screen 25 imidazolium ILs and to make first predictions for two bio-based ILs, [BMIM][oleate] and [BMIM][laurate]. The dataset has since been rebuilt from NIST ILThermo with full source references (12,297 points, 160 publications). While preparing this manuscript, several issues were found that affect the reported results: errors in the descriptor extraction, a validation split that lets the same IL appear in both training and test sets, and inconsistent inputs for the bio-based ILs. These are documented in Section~\ref{sec:issues} so that the next stage of the work can be planned.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Ionic liquids, CO$_2$ capture, solubility prediction, machine learning, density functional theory, r2SCAN-3c, Random Forest.
+\end{IEEEkeywords}
+
+\input{sections/01_introduction}
+\input{sections/02_data}
+\input{sections/03_computational}
+\input{sections/04_models}
+\input{sections/05_results}
+\input{sections/06_screening}
+\input{sections/07_issues}
+\input{sections/08_summary}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
