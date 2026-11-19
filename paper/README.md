@@ -1,8 +1,8 @@
-# Manuscript: current state of the IL–CO₂ solubility work
+# Manuscript: ML prediction of CO₂ solubility in ionic liquids
 
-**Title**: *Machine-Learning Prediction of CO₂ Solubility in Ionic Liquids from DFT Ion Descriptors: Current State of the Work*
+**Title**: *Machine-Learning Prediction of CO₂ Solubility in Ionic Liquids from DFT Ion Descriptors*
 
-**Purpose**: An internal one-column working manuscript for the BRIN supervisor. It describes what has been done so far and the open issues, as the basis for planning the next stage. It is not yet a submission.
+**Format**: one-column manuscript (IEEEtran, 11pt, A4). It is not yet a submission.
 
 ## Layout
 
@@ -18,7 +18,7 @@ paper/
 │   ├── 04_models.tex
 │   ├── 05_results.tex
 │   ├── 06_screening.tex
-│   ├── 07_issues.tex         # problems found while preparing the manuscript
+│   ├── 07_issues.tex         # limitations of the current workflow
 │   └── 08_summary.tex
 ├── figures/
 │   ├── fig_dataset.pdf       # make_figures.py, from data/final_model_dataset_v3.csv
@@ -56,7 +56,6 @@ python paper/code/check_validation.py   # about 5 minutes on a laptop
 
 ## Placeholders to fill
 
-- The author affiliation (research centre) and the supervisor's name in `main.tex`.
 - The citation for the source of `data/rawdata.xlsx` (Tables S5 and S6) in `sections/02_data.tex`.
 
 Placeholders show in red in the PDF.
