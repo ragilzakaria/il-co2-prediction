@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IL CO₂ Solubility — Current State &amp; BRIN Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap">
+<style>
+:root {
+  --ink: #14262C;
+  --soft: #4A5A60;
+  --paper: #F6F5F0;
+  --paper2: #ECF2F0;
+  --card: #FDFCF9;
+  --rule: #D6D3C8;
+  --deep: #0F2A33;
+  --deep2: #183A46;
+  --teal: #0B7065;
+  --tealL: #5FC4B6;
+  --amber: #E0A33A;
+  --mist: #C3D6D3;
+  --cream: #F2F1EA;
+  --tint: #DCEBE7;
+}
+
+body { font-family: 'Inter', Arial, sans-serif; color: var(--ink); }
+
+section {
+  box-sizing: border-box;
+  padding: 128px 128px 160px;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  counter-increment: page;
+}
+section.alt { background: var(--paper2); }
+section.dark { background: var(--deep); color: var(--cream); }
+
+/* Headings */
+.head { display: flex; flex-direction: column; gap: 16px; }
+.eyebrow { font-size: 24px; font-weight: 600; letter-spacing: 3px; color: var(--teal); margin: 0; }
+.dark .eyebrow { color: var(--tealL); }
+.title { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 56px; font-weight: 600; line-height: 1.1; color: var(--ink); margin: 0; }
+.dark .title { color: var(--cream); }
+.lead { font-size: 28px; line-height: 1.45; color: var(--soft); margin: 0; }
+.dark .lead { color: var(--mist); }
+.note { font-size: 24px; line-height: 1.4; color: var(--soft); margin: 0; }
+.dark .note { color: var(--mist); }
+
+/* Cover and dividers */
+.hero { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 96px; font-weight: 600; line-height: 1.05; color: var(--cream); margin: 0; }
+.hero-sub { font-size: 36px; line-height: 1.35; color: var(--mist); margin: 0; }
+.spacer { flex: 1; }
+.byline { font-size: 28px; color: var(--cream); margin: 0; }
+.bar-accent { width: 160px; height: 8px; background: var(--amber); border-radius: 4px; }
+
+/* Footer */
+.foot { position: absolute; left: 128px; bottom: 64px; width: 1664px; display: flex; justify-content: space-between; }
+.foot-l { font-size: 24px; color: var(--soft); margin: 0; }
+.foot-r { font-size: 24px; color: var(--soft); margin: 0; }
+.foot-r::after { content: counter(page); }
+.dark .foot-l { color: var(--mist); }
+.dark .foot-r { color: var(--mist); }
+
+/* Cards */
+.row { display: flex; gap: 32px; }
+.col { display: flex; flex-direction: column; gap: 24px; }
+.card { flex: 1; background: var(--card); border: 2px solid var(--rule); border-radius: 16px; padding: 36px; display: flex; flex-direction: column; gap: 16px; }
+.card.tinted { background: var(--tint); border-color: var(--tint); }
+.dark .card { background: var(--deep2); border-color: var(--deep2); }
+.card-t { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 36px; font-weight: 600; line-height: 1.15; color: var(--ink); margin: 0; }
+.dark .card-t { color: var(--cream); }
+.card-x { font-size: 24px; line-height: 1.45; color: var(--soft); margin: 0; }
+.dark .card-x { color: var(--mist); }
+.card-fix { font-size: 24px; line-height: 1.45; font-weight: 600; color: var(--teal); margin: 0; }
+.tag { font-size: 24px; font-weight: 600; letter-spacing: 2px; color: var(--teal); margin: 0; }
+.dark .tag { color: var(--amber); }
+.card ul { margin: 0; padding-left: 32px; font-size: 24px; line-height: 1.45; color: var(--soft); }
+.card ol { margin: 0; padding-left: 36px; font-size: 24px; line-height: 1.45; color: var(--soft); }
+.dark .card ul { color: var(--mist); }
+
+/* Big numbers */
+.stat { flex: 1; display: flex; flex-direction: column; gap: 12px; border-top: 4px solid var(--teal); padding-top: 24px; }
+.num { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 96px; font-weight: 600; line-height: 1; color: var(--teal); margin: 0; }
+.num-m { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 56px; font-weight: 600; line-height: 1.05; color: var(--teal); margin: 0; }
+.num-l { font-size: 24px; line-height: 1.4; color: var(--soft); margin: 0; }
+
+/* Flow diagrams */
+.flow { display: flex; align-items: stretch; }
+.step { flex: 1; background: var(--card); border: 2px solid var(--rule); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 12px; }
+.step.hot { background: var(--tint); border-color: var(--teal); }
+.step-n { font-size: 24px; font-weight: 600; color: var(--teal); margin: 0; }
+.step-t { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; font-weight: 600; line-height: 1.1; color: var(--ink); margin: 0; }
+.step-x { font-size: 24px; line-height: 1.4; color: var(--soft); margin: 0; }
+.arrow { width: 48px; height: 2px; align-self: center; color: var(--teal); border-width: 4px; }
+.loop { background: var(--deep); border-radius: 16px; padding: 24px 36px; display: flex; align-items: center; gap: 24px; }
+.loop-t { font-size: 28px; line-height: 1.4; color: var(--cream); margin: 0; }
+.loop-icon { width: 48px; height: 48px; color: var(--amber); }
+
+/* Tables */
+.tbl { width: 100%; font-size: 28px; color: var(--ink); }
+.tbl .hd { background: var(--tint); }
+.tbl .best { background: #CFE6DF; }
+
+/* Figures */
+.fig { background: #FEFEFC; border: 2px solid var(--rule); border-radius: 16px; padding: 16px; display: flex; justify-content: center; align-items: center; }
+.cap { font-size: 24px; line-height: 1.4; color: var(--soft); margin: 0; }
+
+/* Timeline */
+.gantt { display: grid; grid-template-columns: 440px repeat(12, 1fr); column-gap: 6px; row-gap: 18px; align-items: center; }
+.g-m { font-size: 24px; color: var(--soft); text-align: center; margin: 0; }
+.g-l { font-size: 24px; font-weight: 600; line-height: 1.3; color: var(--ink); margin: 0; }
+.g-b { height: 44px; border-radius: 10px; background: var(--teal); }
+.g-b.p0 { background: var(--amber); }
+.g-b.light { background: var(--tealL); }
+
+/* Motion */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0px); }
+}
+.rise { animation: rise 600ms ease-out both; animation-delay: calc(var(--i, 0) * 120ms); }
+
+
+html, body { margin: 0; background: #1b1f22; }
+.deck { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0; }
+.frame { width: calc(min(100vw - 32px, 1600px)); aspect-ratio: 16 / 9; position: relative; overflow: hidden;
+         box-shadow: 0 4px 24px rgba(0,0,0,.4); }
+.frame > section { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+.arrow-sa { width: 48px; align-self: center; color: var(--teal); display: flex; flex: none; }
+aside { display: none; }
+.notes { width: calc(min(100vw - 32px, 1600px)); color: #c9d1d3; font: 15px/1.5 Inter, Arial, sans-serif; margin: -12px 0 8px; }
+.notes summary { cursor: pointer; color: #8fb8b2; }
+@media print {
+  html, body { background: none; }
+  .deck { padding: 0; gap: 0; }
+  .frame { width: 100vw; box-shadow: none; break-after: page; }
+  .notes { display: none; }
+  @page { size: 1920px 1080px; margin: 0; }
+}
+
+</style>
+</head>
+<body>
+<!-- Generated by slides/build_slides.py from slides/source/. Do not edit by hand. -->
+<main class="deck">
+<div class="frame"><section id="cover" class="dark" data-transition="fade">
+<p class="eyebrow">RESEARCH ASSISTANT · COMPUTATIONAL CHEMISTRY · BRIN</p>
+<div class="bar-accent"></div>
+<h1 class="hero">Predicting CO₂ solubility in ionic liquids</h1>
+<p class="hero-sub">Where the DFT + machine-learning model stands today, and how BRIN’s HPC and molecular dynamics capabilities can take it further</p>
+<div class="spacer"></div>
+<p class="byline">Maulana Ragil Zakariah · November 2026</p>
+<aside>Two parts: first, an honest snapshot of what has been built so far: the dataset, the quantum descriptors, the models and the first screening results. Second, a proposal for how to continue at BRIN using Mahameru HPC, quantum chemistry and molecular dynamics. The work is fully computational.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Two parts: first, an honest snapshot of what has been built so far: the dataset, the quantum descriptors, the models and the first screening results. Second, a proposal for how to continue at BRIN using Mahameru HPC, quantum chemistry and molecular dynamics. The work is fully computational.</details>
+<div class="frame"><section id="why">
+<div class="head">
+<p class="eyebrow">MOTIVATION</p>
+<h2 class="title">Ionic liquids can be designed for CO₂ capture, but there are too many to test</h2>
+</div>
+<div class="row">
+<div class="card rise" style="--i:0">
+<p class="tag">THE NEED</p>
+<h3 class="card-t">Indonesia needs CO₂ capture</h3>
+<p class="card-x">High-CO₂ gas fields such as East Natuna (≈70% CO₂) and the 2024 CCS regulation (Perpres 14/2024) make capture solvents a national priority.</p>
+</div>
+<div class="card rise" style="--i:1">
+<p class="tag">WHY IONIC LIQUIDS</p>
+<h3 class="card-t">Tunable, non-volatile solvents</h3>
+<p class="card-x">Negligible vapour pressure, and a cation–anion pair that can be chosen for the job, from physical to chemical CO₂ uptake.</p>
+</div>
+<div class="card rise" style="--i:2">
+<p class="tag">THE BOTTLENECK</p>
+<h3 class="card-t">Millions of possible pairs</h3>
+<p class="card-x">High-pressure solubility measurements are slow and costly. A fast model can rank candidates computationally.</p>
+</div>
+</div>
+<p class="lead"><b>Goal:</b> predict CO₂ solubility (mole fraction) for any ionic liquid from its ion structures, temperature and pressure.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>Context first. Indonesia has CO₂-rich gas reserves like East Natuna, and since Perpres 14/2024 there is a legal framework for carbon capture and storage. Ionic liquids are attractive capture solvents because they barely evaporate and can be tuned by swapping the cation or anion. The problem is the sheer number of possible combinations, so we need a model that screens them computationally first.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Context first. Indonesia has CO₂-rich gas reserves like East Natuna, and since Perpres 14/2024 there is a legal framework for carbon capture and storage. Ionic liquids are attractive capture solvents because they barely evaporate and can be tuned by swapping the cation or anion. The problem is the sheer number of possible combinations, so we need a model that screens them computationally first.</details>
+<div class="frame"><section id="pipeline">
+<div class="head">
+<p class="eyebrow">APPROACH</p>
+<h2 class="title">From ion structures to a screening model in five steps</h2>
+</div>
+<div class="flow">
+<div class="step rise" style="--i:0">
+<p class="step-n">1 · DATA</p>
+<h3 class="step-t">Experimental solubility</h3>
+<p class="step-x">11,256 literature points for 113 ionic liquids</p>
+</div>
+<div class="arrow-sa" aria-hidden="true"><svg viewBox="0 0 48 24" width="48" height="24"><line x1="0" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="4"/><path d="M36 4 L46 12 L36 20" fill="none" stroke="currentColor" stroke-width="4"/></svg></div>
+<div class="step rise" style="--i:1">
+<p class="step-n">2 · STRUCTURES</p>
+<h3 class="step-t">3D ion geometries</h3>
+<p class="step-x">SMILES → RDKit embedding → UFF clean-up</p>
+</div>
+<div class="arrow-sa" aria-hidden="true"><svg viewBox="0 0 48 24" width="48" height="24"><line x1="0" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="4"/><path d="M36 4 L46 12 L36 20" fill="none" stroke="currentColor" stroke-width="4"/></svg></div>
+<div class="step rise" style="--i:2">
+<p class="step-n">3 · DFT</p>
+<h3 class="step-t">ORCA 6.0</h3>
+<p class="step-x">r²SCAN-3c optimisation + frequencies for 78 ions</p>
+</div>
+<div class="arrow-sa" aria-hidden="true"><svg viewBox="0 0 48 24" width="48" height="24"><line x1="0" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="4"/><path d="M36 4 L46 12 L36 20" fill="none" stroke="currentColor" stroke-width="4"/></svg></div>
+<div class="step rise" style="--i:3">
+<p class="step-n">4 · FEATURES</p>
+<h3 class="step-t">248 inputs</h3>
+<p class="step-x">Orbital energies, dipole, total energy, atom counts, T and P</p>
+</div>
+<div class="arrow-sa" aria-hidden="true"><svg viewBox="0 0 48 24" width="48" height="24"><line x1="0" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="4"/><path d="M36 4 L46 12 L36 20" fill="none" stroke="currentColor" stroke-width="4"/></svg></div>
+<div class="step hot rise" style="--i:4">
+<p class="step-n">5 · ML</p>
+<h3 class="step-t">Models and screening</h3>
+<p class="step-x">Ridge, Random Forest, Gradient Boosting, Neural Network</p>
+</div>
+</div>
+<p class="note">Implemented as 20 Jupyter notebooks plus a small Flask demo app; data, ORCA inputs/outputs and the trained model are versioned on GitHub.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>The whole pipeline in one picture. Literature data gives the target. Each ion is built from its SMILES, pre-optimised with a force field and optimised with r2SCAN-3c in ORCA. Those quantum numbers, plus atom counts and the temperature and pressure of each measurement, become the model inputs. Four model types were compared.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>The whole pipeline in one picture. Literature data gives the target. Each ion is built from its SMILES, pre-optimised with a force field and optimised with r2SCAN-3c in ORCA. Those quantum numbers, plus atom counts and the temperature and pressure of each measurement, become the model inputs. Four model types were compared.</details>
+<div class="frame"><section id="dataset">
+<div class="head">
+<p class="eyebrow">DATA</p>
+<h2 class="title">A curated dataset of 11,256 solubility measurements</h2>
+</div>
+<div class="row">
+<div class="stat rise" style="--i:0"><p class="num-m">113</p><p class="num-l">ionic liquids: 50 cations × 26 anions</p></div>
+<div class="stat rise" style="--i:1"><p class="num-m">243–453 K</p><p class="num-l">temperature range</p></div>
+<div class="stat rise" style="--i:2"><p class="num-m">≤ 50 MPa</p><p class="num-l">pressure, from 0.8 kPa upward</p></div>
+<div class="stat rise" style="--i:3"><p class="num-m">0 – 0.95</p><p class="num-l">CO₂ mole fraction (the target)</p></div>
+</div>
+<div class="card tinted rise" style="--i:4; flex:none">
+<p class="tag">NEW: TRACEABLE VERSION</p>
+<h3 class="card-t">Every point now linked to its source</h3>
+<p class="card-x">Re-extracted from NIST ILThermo: 12,297 points from 160 publications (2001–2025), each with its DOI and measurement method (static cell 35%, gravimetric 20%, others). Ready for retraining, not yet used by the current model.</p>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>The training set covers 113 ionic liquids, about 100 points each across temperature and pressure. Imidazolium cations dominate. Recently I rebuilt the dataset from NIST ILThermo so every point has a citation, DOI and experimental method; that makes it publishable and lets us weight or filter by measurement method later.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>The training set covers 113 ionic liquids, about 100 points each across temperature and pressure. Imidazolium cations dominate. Recently I rebuilt the dataset from NIST ILThermo so every point has a citation, DOI and experimental method; that makes it publishable and lets us weight or filter by measurement method later.</details>
+<div class="frame"><section id="descriptors">
+<div class="head">
+<p class="eyebrow">QUANTUM DESCRIPTORS</p>
+<h2 class="title">Each ion is described by five DFT numbers</h2>
+</div>
+<div class="row">
+<div class="card rise" style="--i:0; flex:1.4">
+<p class="tag">PROTOCOL (CURRENT)</p>
+<h3 class="card-t">78 ions computed in ORCA 6.0</h3>
+<ul>
+<li>Geometry: RDKit 3D embedding and UFF pre-optimisation, one conformer</li>
+<li>Level of theory: r²SCAN-3c optimisation + frequencies, isolated ion in gas phase</li>
+<li>Parsed per ion: total energy, HOMO, LUMO, HOMO–LUMO gap, dipole moment</li>
+<li>Cation and anion values are joined to every measurement of that IL</li>
+</ul>
+</div>
+<div class="col" style="flex:1">
+<div class="stat rise" style="--i:1"><p class="num-m">10</p><p class="num-l">quantum descriptors (5 per ion)</p></div>
+<div class="stat rise" style="--i:2"><p class="num-m">236</p><p class="num-l">element-count columns, mostly zero</p></div>
+<div class="stat rise" style="--i:3"><p class="num-m">+ T, P</p><p class="num-l">= 248 model inputs in total</p></div>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>The quantum part is deliberately cheap: one r2SCAN-3c optimisation per ion, starting from a single force-field conformer. Five numbers per ion come out of it. Together with an atom count for every element in the periodic table and the measurement conditions, that gives 248 inputs. Most of the atom-count columns are zero, which is something to clean up later.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>The quantum part is deliberately cheap: one r2SCAN-3c optimisation per ion, starting from a single force-field conformer. Five numbers per ion come out of it. Together with an atom count for every element in the periodic table and the measurement conditions, that gives 248 inputs. Most of the atom-count columns are zero, which is something to clean up later.</details>
+<div class="frame"><section id="models">
+<div class="head">
+<p class="eyebrow">RESULTS</p>
+<h2 class="title">Random Forest predicts held-out points with R² = 0.985</h2>
+</div>
+<div class="row" style="align-items:flex-start">
+<div class="rise" style="--i:0; flex:1.7">
+<table class="tbl">
+<tr class="hd"><th style="width:44%">Model</th><th style="width:14%; text-align:right">R²</th><th style="width:14%; text-align:right">MAE</th><th style="width:14%; text-align:right">RMSE</th><th style="width:14%; text-align:right">Train</th></tr>
+<tr><td>Ridge regression</td><td style="text-align:right">0.591</td><td style="text-align:right">0.116</td><td style="text-align:right">0.146</td><td style="text-align:right">0.04 s</td></tr>
+<tr class="best"><td>Random Forest (best)</td><td style="text-align:right">0.985</td><td style="text-align:right">0.017</td><td style="text-align:right">0.028</td><td style="text-align:right">1.0 s</td></tr>
+<tr><td>Gradient Boosting</td><td style="text-align:right">0.973</td><td style="text-align:right">0.026</td><td style="text-align:right">0.037</td><td style="text-align:right">1.1 s</td></tr>
+<tr><td>Neural network (128-64-32)</td><td style="text-align:right">0.966</td><td style="text-align:right">0.035</td><td style="text-align:right">0.042</td><td style="text-align:right">20 s</td></tr>
+</table>
+</div>
+<div class="card tinted rise" style="--i:1; flex:1">
+<p class="tag">IN PLAIN TERMS</p>
+<h3 class="card-t">Typical error ≈ 0.017 mole fraction</h3>
+<p class="card-x">Measured on test points from ionic liquids the model has already seen at other temperatures and pressures.</p>
+</div>
+</div>
+<p class="note">80/20 random split: 9,004 training and 2,252 test points. MAE and RMSE are in CO₂ mole fraction.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>Four models on the same split. The linear model clearly cannot capture the curved pressure dependence. All three nonlinear models do well and Random Forest is best and trains in about a second. Note the wording on the right: these are test points from ILs that also appear in training. I come back to why that matters in the gaps section.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Four models on the same split. The linear model clearly cannot capture the curved pressure dependence. All three nonlinear models do well and Random Forest is best and trains in about a second. Note the wording on the right: these are test points from ILs that also appear in training. I come back to why that matters in the gaps section.</details>
+<div class="frame"><section id="parity">
+<div class="head">
+<p class="eyebrow">RESULTS</p>
+<h2 class="title">Tree models track experiment closely; the linear model cannot</h2>
+</div>
+<div class="row" style="align-items:flex-start">
+<div class="fig">
+<img src="../images/results/parity%20plots.png" alt="Parity plots of predicted versus experimental CO2 solubility for Ridge (R² 0.59), Random Forest (0.985), Gradient Boosting (0.973) and Neural Network (0.966)" style="width:562px; height:540px; object-fit:contain">
+</div>
+<div class="col" style="flex:1; gap:16px">
+<div class="card rise" style="--i:0; padding:24px 32px; gap:12px">
+<h3 class="card-t">Random Forest and Gradient Boosting</h3>
+<p class="card-x">Points hug the diagonal from 0 to about 0.85 mole fraction, with a few outliers at mid-range.</p>
+</div>
+<div class="card rise" style="--i:1; padding:24px 32px; gap:12px">
+<h3 class="card-t">Neural network</h3>
+<p class="card-x">Slight bias: under-predicts above 0.6 and over-predicts near zero.</p>
+</div>
+<div class="card rise" style="--i:2; padding:24px 32px; gap:12px">
+<h3 class="card-t">Ridge regression</h3>
+<p class="card-x">Fans out at high solubility: the pressure dependence is not linear.</p>
+</div>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>Predicted against measured solubility on the test set for all four models. The red dashed line is perfect agreement. The neural network shows a small systematic bias at both ends, which suggests it would benefit from tuning or more data at high loading.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Predicted against measured solubility on the test set for all four models. The red dashed line is perfect agreement. The neural network shows a small systematic bias at both ends, which suggests it would benefit from tuning or more data at high loading.</details>
+<div class="frame"><section id="drivers">
+<div class="head">
+<p class="eyebrow">WHAT DRIVES THE PREDICTION</p>
+<h2 class="title">Pressure dominates; anion energy is the strongest ion descriptor</h2>
+</div>
+<p class="note">Permutation importance for the Random Forest: the drop in R² when one input is shuffled (10 repeats, test set).</p>
+<div class="gantt rise" style="--i:0; grid-template-columns:400px 1fr 140px; row-gap:20px; column-gap:24px">
+<p class="g-l" style="grid-column:1; grid-row:1">Pressure</p><div style="grid-column:2; grid-row:1"><div class="g-b" style="width:1000px"></div></div><p class="g-l" style="grid-column:3; grid-row:1">1.87</p>
+<p class="g-l" style="grid-column:1; grid-row:2">Temperature</p><div style="grid-column:2; grid-row:2"><div class="g-b" style="width:101px"></div></div><p class="g-l" style="grid-column:3; grid-row:2">0.19</p>
+<p class="g-l" style="grid-column:1; grid-row:3">Anion total energy</p><div style="grid-column:2; grid-row:3"><div class="g-b" style="width:71px"></div></div><p class="g-l" style="grid-column:3; grid-row:3">0.13</p>
+<p class="g-l" style="grid-column:1; grid-row:4">Cation total energy</p><div style="grid-column:2; grid-row:4"><div class="g-b" style="width:5px"></div></div><p class="g-l" style="grid-column:3; grid-row:4">0.008</p>
+<p class="g-l" style="grid-column:1; grid-row:5">Anion HOMO</p><div style="grid-column:2; grid-row:5"><div class="g-b" style="width:4px"></div></div><p class="g-l" style="grid-column:3; grid-row:5">0.007</p>
+<p class="g-l" style="grid-column:1; grid-row:6">Each of the other 7</p><div style="grid-column:2; grid-row:6"><div class="g-b" style="width:3px"></div></div><p class="g-l" style="grid-column:3; grid-row:6">&lt; 0.005</p>
+</div>
+<p class="note"><b>Caveat:</b> total energy scales with ion size, so it may work as an “anion ID” rather than as chemistry. More physical descriptors are part of the roadmap.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>Shuffling pressure destroys the model, which is expected because solubility is mostly an isotherm in pressure. Among the quantum descriptors the anion matters most, consistent with the literature that the anion controls CO₂ solubility. But be careful: total electronic energy mostly tracks how many electrons the ion has, so the model may be using it to recognise which anion it is. That motivates better descriptors.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Shuffling pressure destroys the model, which is expected because solubility is mostly an isotherm in pressure. Among the quantum descriptors the anion matters most, consistent with the literature that the anion controls CO₂ solubility. But be careful: total electronic energy mostly tracks how many electrons the ion has, so the model may be using it to recognise which anion it is. That motivates better descriptors.</details>
+<div class="frame"><section id="screening">
+<div class="head">
+<p class="eyebrow">FIRST SCREENING</p>
+<h2 class="title">Imidazolium ranks highest; [Tf₂N] tops every cation</h2>
+</div>
+<div class="row" style="align-items:flex-start">
+<div class="col" style="flex:1.1; gap:16px">
+<div class="fig">
+<img src="../images/thesis_figures/Figure_IV_7_Cation_Boxplot.png" alt="Box plot of predicted CO2 solubility by cation family: imidazolium median about 0.35, pyridinium 0.31, pyrrolidinium 0.26, phosphonium 0.24, ammonium 0.18" style="width:820px; height:430px; object-fit:contain">
+</div>
+<p class="cap">Predicted CO₂ solubility by cation family across screened ILs (median: imidazolium ≈ 0.35, ammonium ≈ 0.18).</p>
+</div>
+<div class="card rise" style="--i:0; flex:1">
+<p class="tag">TOP 5 OF 25 IMIDAZOLIUM ILs</p>
+<h3 class="card-t">323 K, 5 MPa</h3>
+<table class="tbl" style="font-size:24px">
+<tr class="hd"><th style="width:65%">Ionic liquid</th><th style="width:35%; text-align:right">Predicted x</th></tr>
+<tr><td>[OMIM][Tf₂N]</td><td style="text-align:right">0.643</td></tr>
+<tr><td>[HMIM][Tf₂N]</td><td style="text-align:right">0.549</td></tr>
+<tr><td>[BMIM][Tf₂N]</td><td style="text-align:right">0.526</td></tr>
+<tr><td>[PMIM][Tf₂N]</td><td style="text-align:right">0.521</td></tr>
+<tr><td>[EMIM][Tf₂N]</td><td style="text-align:right">0.516</td></tr>
+</table>
+<p class="card-x">Longer alkyl chains and [Tf₂N] raise uptake, as in experiment. Most of these ILs are in the training data, so this checks consistency, not discovery.</p>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · current state</p><p class="foot-r"></p></div>
+<aside>Using the model as a screening tool, imidazolium cations come out on top on average and ammonium at the bottom, which matches experimental trends. Among 25 imidazolium combinations, all five [Tf2N] salts rank first and uptake rises with chain length, again as measured. Because most of these ILs were in training, this is a consistency check; the next section explains what has to change before the model can be trusted for new ILs.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Using the model as a screening tool, imidazolium cations come out on top on average and ammonium at the bottom, which matches experimental trends. Among 25 imidazolium combinations, all five [Tf2N] salts rank first and uptake rises with chain length, again as measured. Because most of these ILs were in training, this is a consistency check; the next section explains what has to change before the model can be trusted for new ILs.</details>
+<div class="frame"><section id="gaps-validation">
+<div class="head">
+<p class="eyebrow">KNOWN GAPS · 1 OF 2</p>
+<h2 class="title">What R² = 0.985 does not yet tell us</h2>
+</div>
+<div class="row">
+<div class="card rise" style="--i:0">
+<p class="tag">VALIDATION</p>
+<h3 class="card-t">The split is by data point, not by ionic liquid</h3>
+<p class="card-x">Each IL contributes about 100 points along its isotherms. A random split puts the same IL in both the training and the test set, so the score measures interpolation, not prediction for a new IL.</p>
+<p class="card-fix">Fix: leave-IL-out and leave-anion-out cross-validation, with errors reported per IL family.</p>
+</div>
+<div class="card rise" style="--i:1">
+<p class="tag">APPLICABILITY DOMAIN</p>
+<h3 class="card-t">New anion families are extrapolation</h3>
+<p class="card-x">82% of points have imidazolium cations, and the anions are mostly fluorinated, sulfonate, sulfate and phosphate ions. Holding out whole anions drops R² to about 0.83, close to a T-and-P-only model (0.78).</p>
+<p class="card-fix">Fix: a domain check before every prediction, and descriptors that carry chemistry, not identity (workstream 1).</p>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · known gaps</p><p class="foot-r"></p></div>
+<aside>This is the most important methodological point. Because points from the same IL are in both training and test, R² 0.985 mostly says the model can fill in an isotherm it has partly seen. The real question for screening is how well it predicts an IL it has never seen, and that will be a lower number. Second, the data are dominated by imidazolium and a few anion families. A quick leave-anion-out check gives R² around 0.83, barely above a model that only knows temperature and pressure, so new anion families are where the model is weakest.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>This is the most important methodological point. Because points from the same IL are in both training and test, R² 0.985 mostly says the model can fill in an isotherm it has partly seen. The real question for screening is how well it predicts an IL it has never seen, and that will be a lower number. Second, the data are dominated by imidazolium and a few anion families. A quick leave-anion-out check gives R² around 0.83, barely above a model that only knows temperature and pressure, so new anion families are where the model is weakest.</details>
+<div class="frame"><section id="gaps-inputs" data-transition="fade">
+<div class="head">
+<p class="eyebrow">KNOWN GAPS · 2 OF 2</p>
+<h2 class="title">Inputs to fix before scaling up</h2>
+</div>
+<div class="row">
+<div class="card rise" style="--i:0">
+<p class="tag">DESCRIPTORS</p>
+<h3 class="card-t">The QM level is minimal</h3>
+<p class="card-x">One UFF conformer per ion, optimised with r²SCAN-3c as an isolated gas-phase ion: no conformer search, no ion pairing, no solvent. [DCA] and [PF₆] did not converge.</p>
+<p class="card-fix">Fix: the workstream 1 protocol.</p>
+</div>
+<div class="card rise" style="--i:1">
+<p class="tag">DESCRIPTOR EXTRACTION</p>
+<h3 class="card-t">The parser read the wrong lines</h3>
+<p class="card-x">HOMO taken from an unrelated table for 39 of 76 ions; dipole stored as the x component in a.u., and as 0 for 44 ions; energy from the starting geometry, not the optimised one.</p>
+<p class="card-fix">Fix: corrected parser is ready; re-extract and retrain.</p>
+</div>
+<div class="card rise" style="--i:2">
+<p class="tag">FIGURES</p>
+<h3 class="card-t">Some thesis figures are illustrative</h3>
+<p class="card-x">The HOMO, ESP, NBO, NCI, IR and RDF panels were drawn as schematics, not computed from calculations.</p>
+<p class="card-fix">Fix: replace with real ORCA and MD outputs (workstreams 1–2).</p>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · known gaps</p><p class="foot-r"></p></div>
+<aside>Three practical issues I found while reviewing the code. The descriptor protocol is the cheapest reasonable one, with a single conformer and two anions that never converged. The descriptor parser also read the wrong lines of the ORCA output for the HOMO, the dipole and the energy, so part of the DFT input to the model is noise; a corrected parser already exists. And several thesis figures are schematics; with BRIN's HPC we can replace them with real calculations. Raising these now is better than having a reviewer find them.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Three practical issues I found while reviewing the code. The descriptor protocol is the cheapest reasonable one, with a single conformer and two anions that never converged. The descriptor parser also read the wrong lines of the ORCA output for the HOMO, the dipole and the energy, so part of the DFT input to the model is noise; a corrected parser already exists. And several thesis figures are schematics; with BRIN's HPC we can replace them with real calculations. Raising these now is better than having a reviewer find them.</details>
+<div class="frame"><section id="roadmap" class="dark" data-transition="fade">
+<p class="eyebrow">PART 2 · ROADMAP AT BRIN</p>
+<div class="bar-accent"></div>
+<h2 class="hero">From a fast screening model to a validated design tool</h2>
+<p class="hero-sub">Three computational workstreams using BRIN’s HPC and its quantum-chemistry and molecular dynamics expertise.</p>
+<div class="spacer"></div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>Now the forward-looking part: how I propose to continue at BRIN, using the infrastructure and know-how here.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Now the forward-looking part: how I propose to continue at BRIN, using the infrastructure and know-how here.</details>
+<div class="frame"><section id="workflow" class="alt">
+<div class="head">
+<p class="eyebrow">THE PLAN</p>
+<h2 class="title">A multiscale loop where each level feeds the next</h2>
+</div>
+<div class="flow">
+<div class="step rise" style="--i:0">
+<p class="step-n">WS1 · QUANTUM</p>
+<h3 class="step-t">Better descriptors</h3>
+<p class="step-x">Conformers, ion pairs, CO₂ binding and COSMO-RS σ-profiles</p>
+</div>
+<div class="arrow-sa" aria-hidden="true"><svg viewBox="0 0 48 24" width="48" height="24"><line x1="0" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="4"/><path d="M36 4 L46 12 L36 20" fill="none" stroke="currentColor" stroke-width="4"/></svg></div>
+<div class="step rise" style="--i:1">
+<p class="step-n">WS2 · MOLECULAR DYNAMICS</p>
+<h3 class="step-t">Bulk liquid behaviour</h3>
+<p class="step-x">Density, free volume, CO₂ solvation and Henry constants</p>
+</div>
+<div class="arrow-sa" aria-hidden="true"><svg viewBox="0 0 48 24" width="48" height="24"><line x1="0" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="4"/><path d="M36 4 L46 12 L36 20" fill="none" stroke="currentColor" stroke-width="4"/></svg></div>
+<div class="step hot rise" style="--i:2">
+<p class="step-n">WS3 · MACHINE LEARNING</p>
+<h3 class="step-t">Honest model with uncertainty</h3>
+<p class="step-x">Group-wise validation, physical features, error bars</p>
+</div>
+</div>
+<div class="loop rise" style="--i:4">
+<svg class="loop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+<p class="loop-t"><b>Active learning:</b> the model’s uncertainty chooses which ions and liquids to compute next with QM and MD; every new result goes back into the model.</p>
+</div>
+<p class="note">Runs on BRIN’s Mahameru HPC: CPU nodes for DFT job arrays, NVIDIA DGX GPUs for MD and model training.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>The core idea is a loop across scales. Quantum chemistry gives better molecular descriptors. Molecular dynamics explains how CO₂ sits in the bulk liquid and gives physically meaningful features. The ML model combines them and tells us where it is uncertain, which decides what to compute next. Everything is computational. Each workstream is useful on its own, so the plan degrades gracefully if one part is slower.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>The core idea is a loop across scales. Quantum chemistry gives better molecular descriptors. Molecular dynamics explains how CO₂ sits in the bulk liquid and gives physically meaningful features. The ML model combines them and tells us where it is uncertain, which decides what to compute next. Everything is computational. Each workstream is useful on its own, so the plan degrades gracefully if one part is slower.</details>
+<div class="frame"><section id="brin" class="alt">
+<div class="head">
+<p class="eyebrow">BRIN RESOURCES</p>
+<h2 class="title">What BRIN makes possible that a laptop cannot</h2>
+</div>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px">
+<div class="card rise" style="--i:0; padding:28px 36px">
+<p class="tag">COMPUTE</p>
+<h3 class="card-t">Mahameru HPC</h3>
+<p class="card-x">BRIN’s national HPC, booked through ELSA: CPU partitions for DFT job arrays and an NVIDIA DGX GPU cluster for MD and deep learning.</p>
+</div>
+<div class="card rise" style="--i:1; padding:28px 36px">
+<p class="tag">COMPUTE · TO EXPLORE</p>
+<h3 class="card-t">ASEAN–Korea HPC Facility</h3>
+<p class="card-x">Hosted at BRIN with KISTI and listed with 64 NVIDIA H200 GPUs: a candidate for large MD campaigns and graph-network training.</p>
+</div>
+<div class="card rise" style="--i:2; padding:28px 36px">
+<p class="tag">SOFTWARE AND STORAGE</p>
+<h3 class="card-t">A shared simulation stack</h3>
+<p class="card-x">ORCA 6, CREST/xTB, GROMACS and CP2K installed on the cluster, plus project storage for MD trajectories.</p>
+</div>
+<div class="card rise" style="--i:3; padding:28px 36px">
+<p class="tag">PEOPLE</p>
+<h3 class="card-t">MD and DFT know-how</h3>
+<p class="card-x">The computational chemistry group: force-field choice, simulation protocols and DFT benchmarks [supervisor and collaborators].</p>
+</div>
+</div>
+<p class="note">Hardware from hpc.brin.go.id and akf-hpc.brin.go.id; allocation to be confirmed with the BRIN HPC team.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>Everything so far ran on a laptop. BRIN changes three things. Compute: Mahameru gives CPU nodes for thousands of independent DFT jobs and DGX GPUs for MD and model training; the new ASEAN–Korea facility hosted at BRIN is worth exploring for bigger runs. Software and storage: a maintained simulation stack instead of my laptop. And people: the group's experience with MD force fields and DFT protocols is exactly what this project lacks today. Please correct me on the allocation details.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Everything so far ran on a laptop. BRIN changes three things. Compute: Mahameru gives CPU nodes for thousands of independent DFT jobs and DGX GPUs for MD and model training; the new ASEAN–Korea facility hosted at BRIN is worth exploring for bigger runs. Software and storage: a maintained simulation stack instead of my laptop. And people: the group's experience with MD force fields and DFT protocols is exactly what this project lacks today. Please correct me on the allocation details.</details>
+<div class="frame"><section id="ws-qm" class="alt">
+<div class="head">
+<p class="eyebrow">WORKSTREAM 1 · QUANTUM CHEMISTRY</p>
+<h2 class="title">A defensible QM protocol for every ion</h2>
+</div>
+<div class="row">
+<div class="card rise" style="--i:0">
+<p class="tag">GEOMETRY</p>
+<h3 class="card-t">Conformers and optimisation</h3>
+<ul>
+<li>CREST / GFN2-xTB conformer search</li>
+<li>r²SCAN-3c optimisation and frequencies</li>
+<li>ωB97X-D3/def2-TZVPD single points, diffuse functions for anions</li>
+</ul>
+</div>
+<div class="card rise" style="--i:1">
+<p class="tag">INTERACTIONS</p>
+<h3 class="card-t">Ion pairs and CO₂ complexes</h3>
+<ul>
+<li>Cation–anion and anion–CO₂ binding energies</li>
+<li>DLPNO-CCSD(T) benchmark on a subset</li>
+<li>ESP extremes and charge transfer as descriptors</li>
+</ul>
+</div>
+<div class="card rise" style="--i:2">
+<p class="tag">SOLVATION</p>
+<h3 class="card-t">COSMO-RS σ-profiles</h3>
+<ul>
+<li>CPCM and openCOSMO-RS in ORCA 6</li>
+<li>σ-moments as compact, physical ML features</li>
+<li>COSMO-RS Henry constants as a baseline</li>
+</ul>
+</div>
+</div>
+<p class="note">About 80 ions, 110 ion pairs and their CO₂ complexes: all independent jobs, run as job arrays on Mahameru CPU nodes. ORCA 6 is free for academic use.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>Workstream 1 upgrades the quantum layer. Proper conformer search and optimisation instead of a force-field geometry; a larger basis with diffuse functions so the anion orbitals mean something. Then ion pairs and CO₂ complexes, which is where the physics of solubility actually is, plus electrostatic-potential and charge-transfer descriptors that describe how strongly each anion can interact with CO₂. Finally COSMO-RS, which ORCA 6 includes, gives sigma-profiles: a small set of physically meaningful features and an independent baseline prediction. Thousands of independent jobs is exactly what an HPC job array is for.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Workstream 1 upgrades the quantum layer. Proper conformer search and optimisation instead of a force-field geometry; a larger basis with diffuse functions so the anion orbitals mean something. Then ion pairs and CO₂ complexes, which is where the physics of solubility actually is, plus electrostatic-potential and charge-transfer descriptors that describe how strongly each anion can interact with CO₂. Finally COSMO-RS, which ORCA 6 includes, gives sigma-profiles: a small set of physically meaningful features and an independent baseline prediction. Thousands of independent jobs is exactly what an HPC job array is for.</details>
+<div class="frame"><section id="ws-md" class="alt">
+<div class="head">
+<p class="eyebrow">WORKSTREAM 2 · MOLECULAR DYNAMICS</p>
+<h2 class="title">Simulate the liquid, not just the ions</h2>
+</div>
+<div class="row">
+<div class="card rise" style="--i:0">
+<p class="tag">SYSTEMS</p>
+<h3 class="card-t">Benchmarks, then hard cases</h3>
+<ul>
+<li>[BMIM][PF6], [BMIM][BF4], [BMIM][Tf2N]: well measured and in our dataset</li>
+<li>Then ILs the model predicts worst, e.g. thiocyanates</li>
+<li>300–500 ion pairs, several T and CO₂ loadings</li>
+</ul>
+</div>
+<div class="card rise" style="--i:1">
+<p class="tag">METHOD</p>
+<h3 class="card-t">Force fields and engines</h3>
+<ul>
+<li>CL&amp;P or polarisable CL&amp;Pol force fields</li>
+<li>GROMACS on DGX GPUs, ≥ 100 ns per state (ILs are viscous)</li>
+<li>CP2K ab initio MD on small cells to check the force field</li>
+</ul>
+</div>
+<div class="card rise" style="--i:2">
+<p class="tag">OUTPUTS</p>
+<h3 class="card-t">Properties and ML features</h3>
+<ul>
+<li>Density and viscosity against experiment</li>
+<li>Free volume, CO₂ RDFs and coordination</li>
+<li>Henry constants from free-energy methods</li>
+</ul>
+</div>
+</div>
+<p class="note">MD answers why a liquid absorbs CO₂, gives new features for the model, and replaces the schematic RDF figure with computed ones.</p>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>Solubility is a bulk property, so we need to simulate the bulk liquid. Start with three well-studied imidazolium ILs that are in our dataset, to validate the force field against density, viscosity and published solubility. Then move to the ionic liquids the model gets most wrong, such as the thiocyanates. Non-polarisable force fields usually need scaled charges for ionic liquids; the CL&amp;Pol polarisable version is the more rigorous option, and this is where I would value the group's advice. Ionic liquids are slow, so runs need to be long, which is why GPUs matter. A small ab initio MD study in CP2K gives a reference to check the force field against.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Solubility is a bulk property, so we need to simulate the bulk liquid. Start with three well-studied imidazolium ILs that are in our dataset, to validate the force field against density, viscosity and published solubility. Then move to the ionic liquids the model gets most wrong, such as the thiocyanates. Non-polarisable force fields usually need scaled charges for ionic liquids; the CL&amp;Pol polarisable version is the more rigorous option, and this is where I would value the group's advice. Ionic liquids are slow, so runs need to be long, which is why GPUs matter. A small ab initio MD study in CP2K gives a reference to check the force field against.</details>
+<div class="frame"><section id="ws-ml" class="alt">
+<div class="head">
+<p class="eyebrow">WORKSTREAM 3 · MACHINE LEARNING</p>
+<h2 class="title">Make the model honest about new ionic liquids</h2>
+</div>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px">
+<div class="card rise" style="--i:0; padding:28px 36px">
+<p class="tag">VALIDATION</p>
+<h3 class="card-t">Group-wise testing</h3>
+<p class="card-x">Leave-IL-out and leave-anion-out cross-validation, with errors per family and per isotherm. Retrain on the 12,297-point referenced dataset.</p>
+</div>
+<div class="card rise" style="--i:1; padding:28px 36px">
+<p class="tag">FEATURES</p>
+<h3 class="card-t">Fewer, more physical inputs</h3>
+<p class="card-x">Replace 236 sparse atom counts with σ-moments, molecular volume, electrostatic-potential extremes and MD-derived features; keep T and P.</p>
+</div>
+<div class="card rise" style="--i:2; padding:28px 36px">
+<p class="tag">MODELS</p>
+<h3 class="card-t">Uncertainty and structure</h3>
+<p class="card-x">Boosted-tree and Gaussian-process ensembles that report error bars; graph neural networks on ion structures, trained on DGX GPUs.</p>
+</div>
+<div class="card rise" style="--i:3; padding:28px 36px">
+<p class="tag">PHYSICS</p>
+<h3 class="card-t">Built-in thermodynamics</h3>
+<p class="card-x">Solubility that rises with pressure and follows Henry’s law at low pressure, so isotherms stay physical when the model extrapolates.</p>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>Workstream 3 rebuilds the model around the question that matters for screening: how good is it for an ionic liquid it has never seen? Group-wise cross-validation answers that honestly. The atom-count block is replaced by a small set of physical descriptors from workstreams 1 and 2. Models should give an uncertainty with every prediction, which is also what drives active learning. And simple physical constraints keep the predicted isotherms sensible outside the training range.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>Workstream 3 rebuilds the model around the question that matters for screening: how good is it for an ionic liquid it has never seen? Group-wise cross-validation answers that honestly. The atom-count block is replaced by a small set of physical descriptors from workstreams 1 and 2. Models should give an uncertainty with every prediction, which is also what drives active learning. And simple physical constraints keep the predicted isotherms sensible outside the training range.</details>
+<div class="frame"><section id="asks">
+<div class="head">
+<p class="eyebrow">DELIVERABLES AND NEEDS</p>
+<h2 class="title">What this delivers, and what it needs from BRIN</h2>
+</div>
+<div class="row">
+<div class="card tinted rise" style="--i:0">
+<p class="tag">DELIVERABLES</p>
+<ul>
+<li>Referenced dataset: 12,297 points from 160 sources (done)</li>
+<li>Validated model with leave-IL-out scores</li>
+<li>QM and COSMO-RS descriptors for all ions and ion pairs</li>
+<li>MD benchmark data and reusable workflow scripts on Git</li>
+<li>Ranked shortlist of candidate ILs with predicted uptake and error bars</li>
+<li>Two manuscripts</li>
+</ul>
+</div>
+<div class="card rise" style="--i:1">
+<p class="tag">NEEDS FROM BRIN</p>
+<ul>
+<li>Mahameru account: [__] CPU core-hours and [__] GPU-hours</li>
+<li>Software on the cluster: ORCA 6, CREST/xTB, GROMACS, CP2K and a Python ML stack</li>
+<li>Supervision on MD force fields and validation</li>
+<li>Storage for MD trajectories, about [__] TB</li>
+</ul>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>On the left, concrete outputs, one of which already exists. On the right, what I need to make the rest happen. The compute numbers are placeholders; I would like to size them with the HPC team once the first benchmark MD runs give real timings.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>On the left, concrete outputs, one of which already exists. On the right, what I need to make the rest happen. The compute numbers are placeholders; I would like to size them with the HPC team once the first benchmark MD runs give real timings.</details>
+<div class="frame"><section id="close" class="dark">
+<p class="eyebrow">DISCUSSION</p>
+<div class="bar-accent"></div>
+<h2 class="hero">Three decisions to make together</h2>
+<div class="spacer"></div>
+<div class="row">
+<div class="card rise" style="--i:0">
+<p class="tag">PRIORITY</p>
+<p class="card-x" style="font-size:28px">Which workstream comes first, given the HPC allocation?</p>
+</div>
+<div class="card rise" style="--i:1">
+<p class="tag">METHODS</p>
+<p class="card-x" style="font-size:28px">Which DFT level and force field should be our standard?</p>
+</div>
+<div class="card rise" style="--i:2">
+<p class="tag">SCOPE</p>
+<p class="card-x" style="font-size:28px">How much of the roadmap fits the internship?</p>
+</div>
+</div>
+<div class="foot"><p class="foot-l">IL–CO₂ solubility · BRIN roadmap</p><p class="foot-r"></p></div>
+<aside>To close, three questions where I need your input. My suggestion is to start with Phase 0 and workstream 1 immediately, since they need only CPU time, and to begin the MD benchmarks as soon as GPU access is set up.</aside>
+</section>
+</div>
+<details class="notes"><summary>Speaker notes</summary>To close, three questions where I need your input. My suggestion is to start with Phase 0 and workstream 1 immediately, since they need only CPU time, and to begin the MD benchmarks as soon as GPU access is set up.</details>
+</main>
+<script>
+function fit(){document.querySelectorAll('.frame').forEach(f=>{
+  f.firstElementChild.style.transform='scale('+(f.clientWidth/1920)+')';});}
+addEventListener('resize',fit);addEventListener('load',fit);fit();
+</script>
+</body>
+</html>
