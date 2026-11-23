@@ -1,6 +1,6 @@
 # Presentation slides
 
-Slides for the presentation at BRIN: the current state of the IL–CO₂ solubility model and the proposed computational roadmap (18 slides).
+Slides for a BRIN sharing session on predicting CO₂ solubility in ionic liquids: what was built, lessons learned and next steps (18 slides).
 
 | Path | What it is |
 |---|---|
