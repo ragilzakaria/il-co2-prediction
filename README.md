@@ -49,6 +49,7 @@ images/                   thesis figures, 2D structures and result plots
 data/raw/rawdata.xlsx ──► notebooks/thesis/01–03 ──► data/ions/ (names, SMILES)
 data/ions/ions_with_smiles.csv ──► calculations/structures/ ──► calculations/ions/*.inp ──► ORCA
 calculations/ions/*.out ──► scripts/extract_descriptors.py ──► data/processed/dft_descriptors_r2scan3c.csv
+                                                         ──► scripts/check_descriptors_vs_literature.py (vs data/literature_reference/)
 data/raw/matched_ilthermo_targets.csv ──► scripts/build_referenced_dataset.py ──► data/processed/referenced_co2_solubility_dataset.csv
                                      ──► scripts/merge_referenced_model_dataset.py ──► data/processed/final_referenced_model_dataset.csv
 data/processed/final_referenced_model_dataset.csv ──► scripts/check_validation.py ──► paper/data/results.json
@@ -74,6 +75,9 @@ ORCA 6 is needed for the calculations. It is free for academic use and must be i
 
 ## Known issues
 
+- **[PF6]⁻ broke apart in its r2SCAN-3c optimisation.** The run stopped at the 50-cycle limit with one P–F bond at 2.87 Å (PF₅ + F⁻), and the stored HOMO is +2.4 eV. Every [PF6] descriptor is therefore invalid. That affects 1,320 of the 11,256 thesis training points and 1,557 of the 12,297 referenced points. Rerun [PF6] from an octahedral start.
+- **[C3F7CO2]⁻ and [HSO4]⁻ have imaginary frequencies.** They need re-optimising. Together with [PF6] and the six wrong-species ions, that makes 9 ions to rerun.
+- **The thesis HOMO values for anions do not follow the published ordering at all** (Spearman ρ = −0.25). The corrected parser gives ρ = 0.83 once [PF6] is excluded. See `scripts/check_descriptors_vs_literature.py`.
 - `calculations/ions/BMIM.inp` is a leftover B3LYP/def2-SVP single-point input. It does not match `BMIM.out`, which is the r2SCAN-3c optimisation actually used.
 - The thesis notebooks refer to some folders that no longer exist (`orca_calculations/`, `calculations_individual/`). These were mapped to `calculations/candidates/` and `calculations/ions/`. The notebooks have not been re-run since the move.
 - `scripts/build_full_refs.py` and `scripts/generate_perfect_pdf.py` use the `workspace/` folder next to this repository, which is not part of the repo.
