@@ -43,10 +43,24 @@ Goal: an **honest baseline**, using the same model type as the thesis but with c
 | 1.1 | Rerun the 9 broken ions | ORCA (laptop + HPC) | **done** 25 Nov |
 | 1.2 | Re-extract descriptors; literature check | Claude | **done**: anion HOMO rank ρ = 0.82 (thesis −0.25) |
 | 1.3 | Rebuild the training table with corrected descriptors | Claude | **done**: `final_referenced_model_dataset_r2scan3c.csv` |
-| 1.4 | Retrain with leave-IL-out and leave-anion-out validation; compare thesis descriptors, corrected descriptors, and T + P only | Claude (laptop) | **next** |
+| 1.4 | Retrain with leave-IL-out and leave-anion-out validation; compare thesis descriptors, corrected descriptors, and T + P only | Claude (laptop) | **done** 25 Nov: `scripts/compare_descriptor_sets.py`, `paper/data/descriptor_comparison.csv` |
 | 1.5 | Update manuscript sections 5–7 with the honest numbers | Claude + you | after 1.4 |
 
 **Decision point A:** do the DFT descriptors beat T + P alone for unseen anions? If they barely do, that motivates Phase 3: better, more physical descriptors.
+
+**Answer (25 Nov 2026), leave-anion-out R², mean of 5 folds (Random Forest / gradient boosting):**
+
+| Features | R² |
+|---|---|
+| T + P only | 0.78 / 0.80 |
+| + thesis DFT descriptors | 0.81 / 0.86 (unstable across folds, SD ≈ 0.1) |
+| + corrected DFT descriptors | **0.89 / 0.91** (stable, SD ≈ 0.02–0.03) |
+| + atom counts only (no QM) | 0.88 / 0.90 |
+| + corrected DFT + atom counts | 0.89 / 0.91 |
+
+- The corrections matter: the corrected descriptors beat the thesis ones by 0.05–0.08 and are far more stable across folds.
+- The isolated-ion DFT descriptors are **no better than simple atom counts.** At this level they mostly encode ion size and identity.
+- **Conclusion: go ahead with Phase 3 and Phase 4.** Getting beyond atom counts needs liquid-level physics: COSMO-RS, ion-pair and anion–CO₂ binding, and MD.
 
 ## Phase 2: choose and validate the QM method (now, about 1–2 weeks)
 
@@ -117,7 +131,7 @@ GROMACS 2023.3 is installed on Mahameru. Still to check: whether GPU nodes are a
 
 ## Where things stand (25 Nov 2026)
 
-- Phase 1.1–1.3 done: all 9 ions fixed, descriptors re-extracted, corrected training table built.
+- Phase 1.1–1.4 done: all 9 ions fixed, descriptors re-extracted, corrected training table built, grouped comparison run (decision A answered). Next: 1.5, update the manuscript.
 - HPC job **575850** (ion-pair benchmark, Phase 2.1) is queued.
 
 ## Working rules
