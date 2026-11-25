@@ -53,9 +53,10 @@ column. Nothing was typed from memory.
    - The CO₂ Henry constant at 300 K should be close to Kerlé's 28 ± 3 bar for [BMIM][Tf2N].
    - Viscosity is a harder test: errors of 10–25% are common.
 
-## Lessons for our current descriptors
+## Lessons for our method choices
 
-- **B3LYP without a dispersion correction, and def2-SVP, are on the IL-2013 "avoid" list.** For B3LYP/def2-SVP the mean absolute deviation is 33.6 kJ/mol without counterpoise correction and 15.6 kJ/mol with it (IL-2013, Table 3). Adding D3 and a diffuse or triple-zeta basis brings it to about 4–7 kJ/mol. This supports the planned move to r²SCAN-3c and ωB97X-D3/def2-TZVPD.
+- **The current descriptors are r²SCAN-3c.** They come from a gas-phase optimisation and frequency calculation on one conformer per ion (`! r2SCAN-3c Opt Freq`; see `calculations/ions/*.out`). The r²SCAN-3c basis (mTZVPP) has no diffuse functions, so the gas-phase anion HOMO values are sensitive to the basis (the [SCN]⁻ example above). For the orbital descriptors, use a single point with diffuse functions (ωB97X-D3/def2-TZVPD, as planned).
+- **Avoid B3LYP without a dispersion correction, and small basis sets such as def2-SVP, for ion-pair energies.** For B3LYP/def2-SVP the mean absolute deviation is 33.6 kJ/mol without counterpoise correction and 15.6 kJ/mol with it (IL-2013, Table 3). Adding D3 and a diffuse or triple-zeta basis brings it to about 4–7 kJ/mol. One stray input, `calculations/ions/BMIM.inp`, is a B3LYP/def2-SVP single point and does not match `BMIM.out`. It was not used for the descriptors.
 - **Use a long-range-corrected, dispersion-corrected functional for anion–CO₂ complexes.** García et al. 2015 ([doi:10.1039/C5CP04283F](https://doi.org/10.1039/C5CP04283F)) recommend ωB97X-D. They found anion–CO₂ binding is the main term in IL–CO₂ binding. Their per-liquid values are not in an ESI, so they are not in the table.
 
 ## Gaps: no published computed reference found yet

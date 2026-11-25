@@ -2,9 +2,9 @@
 """
 Figures for the current-state manuscript.
 
-  fig_dataset     coverage of the training set (data/final_model_dataset_v3.csv)
+  fig_dataset     coverage of the training set (data/thesis/final_model_dataset_v3.csv)
   fig_importance  permutation importances from the thesis model comparison
-                  (data/full_feature_importance_comparison.csv, notebook 17)
+                  (data/thesis/full_feature_importance_comparison.csv, notebook 17)
 
 The parity plot (figures/fig_parity_thesis.png) is copied unchanged from
 images/results/ (notebook 17).
@@ -41,7 +41,7 @@ def save(fig, name):
 
 
 def fig_dataset():
-    df = pd.read_csv(os.path.join(ROOT, "data", "final_model_dataset_v3.csv"))
+    df = pd.read_csv(os.path.join(ROOT, "data", "thesis", "final_model_dataset_v3.csv"))
     df["IL"] = df["cation"] + df["anion"]
     fig, axes = plt.subplots(1, 2, figsize=(6.6, 2.6), gridspec_kw={"width_ratios": [1.15, 1]})
     ax = axes[0]
@@ -65,7 +65,7 @@ def fig_dataset():
 
 
 def fig_importance():
-    imp = pd.read_csv(os.path.join(ROOT, "data", "full_feature_importance_comparison.csv"),
+    imp = pd.read_csv(os.path.join(ROOT, "data", "thesis", "full_feature_importance_comparison.csv"),
                       index_col=0)
     imp = imp[~imp.index.str.contains("_num_")]
     models = ["Random Forest", "Gradient Boosting"]

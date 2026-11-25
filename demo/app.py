@@ -17,9 +17,9 @@ app = Flask(__name__,
 CORS(app)  # Enable CORS for local development
 
 # Load model, scaler, and feature names
-MODEL_PATH = '../models/best_random_forest_model.pkl'
-SCALER_PATH = '../models/scaler.pkl'
-FEATURE_NAMES_PATH = '../models/feature_names.pkl'
+MODEL_PATH = '../models/thesis/best_random_forest_model.pkl'
+SCALER_PATH = '../models/thesis/scaler.pkl'
+FEATURE_NAMES_PATH = '../models/thesis/feature_names.pkl'
 
 model = None
 scaler = None

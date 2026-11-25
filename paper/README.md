@@ -22,21 +22,18 @@ paper/
 │   ├── 07_issues.tex         # limitations of the current workflow
 │   └── 08_summary.tex
 ├── figures/
-│   ├── fig_dataset.pdf       # make_figures.py, from data/final_model_dataset_v3.csv
-│   ├── fig_importance.pdf    # make_figures.py, from data/full_feature_importance_comparison.csv
+│   ├── fig_dataset.pdf       # make_figures.py, from data/thesis/final_model_dataset_v3.csv
+│   ├── fig_importance.pdf    # make_figures.py, from data/thesis/full_feature_importance_comparison.csv
 │   ├── fig_parity_thesis.png # copied from images/results/ (notebook 17)
 │   └── fig_bmim_oleate.png   # copied from images/data_plots/
 ├── code/
-│   ├── make_figures.py
-│   ├── extract_descriptors.py  # corrected parser for calculations/ions/*.out
-│   └── check_validation.py     # grouped (leave-IL/cation/anion-out) CV check
+│   └── make_figures.py
 └── data/
-    ├── dft_descriptors_r2scan3c.csv  # output of extract_descriptors.py
-    ├── results.json                  # output of check_validation.py
+    ├── results.json                  # output of scripts/check_validation.py
     └── per_il_error_rf_leave_il_out.csv
 ```
 
-The numbers in Sections 5 and 6 come from the existing notebooks (`notebooks/15`, `17`, `18`, `20`). The checks in Section 7 come from `code/`.
+The numbers in Sections 5 and 6 come from the thesis notebooks (`notebooks/thesis/15`, `17`, `18`, `20`). The checks in Section 7 come from `scripts/extract_descriptors.py` (writes `data/processed/dft_descriptors_r2scan3c.csv`) and `scripts/check_validation.py`.
 
 ## Build
 
@@ -51,12 +48,12 @@ The scripts need `pandas`, `numpy`, `scikit-learn` and `matplotlib`. Run them fr
 
 ```bash
 python paper/code/make_figures.py
-python paper/code/extract_descriptors.py
-python paper/code/check_validation.py   # about 5 minutes on a laptop
+python scripts/extract_descriptors.py
+python scripts/check_validation.py   # about 5 minutes on a laptop
 ```
 
 ## Placeholders to fill
 
-- The citation for the source of `data/rawdata.xlsx` (Tables S5 and S6) in `sections/02_data.tex`.
+- The citation for the source of `data/raw/rawdata.xlsx` (Tables S5 and S6) in `sections/02_data.tex`.
 
 Placeholders show in red in the PDF.

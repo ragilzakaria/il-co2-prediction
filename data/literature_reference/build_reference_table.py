@@ -113,7 +113,7 @@ def rows():
                    conditions=f"T = {r['T_K']} K, infinite dilution", source=s, doi=d, location=loc)
 
 
-IONS = list(csv.DictReader(open(DATA / "ions_with_smiles.csv")))
+IONS = list(csv.DictReader(open(DATA / "ions" / "ions_with_smiles.csv")))
 CATIONS = {r["ion_abbreviation"] for r in IONS if r["ion_type"] == "cation"}
 
 
@@ -125,7 +125,7 @@ def main():
         w.writerows(out)
 
     pairs = collections.Counter()
-    with open(DATA / "final_referenced_model_dataset.csv") as f:
+    with open(DATA / "processed" / "final_referenced_model_dataset.csv") as f:
         for r in csv.DictReader(f):
             pairs[(r["cation"], r["anion"])] += 1
     have = collections.defaultdict(set)
