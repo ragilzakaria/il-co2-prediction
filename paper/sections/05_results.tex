@@ -1,11 +1,11 @@
 \section{Results}
 \label{sec:results}
 
-\subsection{Model comparison}
-Table~\ref{tab:metrics} and Fig.~\ref{fig:parity} show the test-set performance. The three non-linear models all reach $R^2 > 0.96$, with Random Forest best on every metric. Its predictions follow the parity line from zero to about 0.85 mole fraction, with a few mid-range outliers. Gradient Boosting shows slightly more scatter. The neural network has a small systematic bias: it under-predicts above $\xco \approx 0.6$ and over-predicts near zero. Ridge regression fails at high solubility, where the dependence on pressure is strongly non-linear, and its predictions fan out above $\xco \approx 0.5$.
+\subsection{Thesis protocol: random split}
+Table~\ref{tab:metrics} and Fig.~\ref{fig:parity} show the test-set performance of the thesis models on the random 80/20 split. The three non-linear models reach $R^2 > 0.96$, with Random Forest best on every metric. Ridge regression fails at high solubility, where the dependence on pressure is strongly non-linear. These numbers use the thesis descriptors and a split in which nearly every test IL is also in the training set; Section~\ref{sec:grouped} shows that they overstate the accuracy for new ILs.
 
 \begin{table}[t]
-\caption{Test-set performance of the four models (random 80/20 split, 2,252 test points). MAE and RMSE are in mole fraction. Training times are for one fit on a laptop CPU.}
+\caption{Thesis protocol: test-set performance of the four models on the thesis set with the thesis descriptors (random 80/20 split, 2,252 test points). MAE and RMSE are in mole fraction. Training times are for one fit on a laptop CPU.}
 \label{tab:metrics}
 \centering
 \begin{tabular}{lcccc}
@@ -23,18 +23,67 @@ Ridge regression & 0.5906 & 0.1164 & 0.1455 & 0.1 \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.8\textwidth]{figures/fig_parity_thesis.png}
-\caption{Predicted against experimental \co{} solubility on the test set for the four models. The dashed line marks perfect agreement.}
+\caption{Thesis protocol: predicted against experimental \co{} solubility on the random test set for the four models. The dashed line marks perfect agreement.}
 \label{fig:parity}
 \end{figure}
 
-The neural-network scores vary between runs because its training is not seeded: three runs gave $R^2$ of 0.9616, 0.9656 and 0.9687. The tree models are deterministic for the fixed seed.
+\subsection{Grouped validation and descriptor comparison}
+\label{sec:grouped}
+Table~\ref{tab:grouped} and Fig.~\ref{fig:grouped} give the results of the main protocol on the referenced dataset. Four observations stand out.
 
-\subsection{Feature importance}
-Fig.~\ref{fig:importance} shows permutation importances for Random Forest and Gradient Boosting, excluding atom counts. Pressure dominates: shuffling it lowers $R^2$ by about 1.9, which means predictions become worse than predicting the mean. Temperature follows at about 0.19. Among the DFT descriptors, the anion total energy is clearly the most important (0.13 for Random Forest, 0.07 for Gradient Boosting). It is followed at an order of magnitude lower by the cation total energy and the anion HOMO and LUMO energies. The dipole moments and HOMO--LUMO gaps contribute least. For the linear Ridge model the order is similar after pressure and temperature, but the cation LUMO ranks second among the descriptors. The large weight of the anion descriptors agrees with the known dominant role of the anion in physical \co{} solubility\cite{cadena2004why, anthony2005anion}. However, the total energy mainly scales with the size and elemental composition of an ion, so it may act as an identifier of the ion rather than a measure of its interaction with \co{} (see Section~\ref{sec:issues}).
+\begin{table}[t]
+\caption{Main protocol: 5-fold cross-validation on the referenced dataset (12,297 points, 109 ILs). $R^2$ is the mean $\pm$ standard deviation over the folds; MAE (mole fraction) is the fold mean for leave-anion-out. RF: Random Forest; GB: histogram gradient boosting. Counts: elemental atom counts.}
+\label{tab:grouped}
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llcccc}
+\toprule
+ & & \multicolumn{3}{c}{\textbf{$R^2$}} & \textbf{MAE} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-6}
+ & \textbf{Features ($T$, $P$ +)} & \textbf{Point-wise} & \textbf{Leave-IL-out} & \textbf{Leave-anion-out} & \textbf{Leave-anion-out} \\
+\midrule
+RF & --- & 0.853 & $0.836 \pm 0.034$ & $0.775 \pm 0.092$ & 0.075 \\
+ & counts & 0.982 & $0.954 \pm 0.011$ & $0.884 \pm 0.044$ & 0.053 \\
+ & thesis DFT & 0.980 & $0.939 \pm 0.018$ & $0.807 \pm 0.123$ & 0.061 \\
+ & corrected DFT & 0.982 & $0.955 \pm 0.009$ & $\mathbf{0.890 \pm 0.028}$ & 0.054 \\
+ & thesis DFT + counts & 0.982 & $0.951 \pm 0.012$ & $0.828 \pm 0.124$ & 0.060 \\
+ & corrected DFT + counts & 0.983 & $0.957 \pm 0.011$ & $0.886 \pm 0.030$ & 0.055 \\
+\midrule
+GB & --- & 0.875 & $0.857 \pm 0.036$ & $0.801 \pm 0.084$ & 0.072 \\
+ & counts & 0.989 & $0.967 \pm 0.010$ & $0.903 \pm 0.047$ & 0.047 \\
+ & thesis DFT & 0.989 & $0.955 \pm 0.010$ & $0.858 \pm 0.089$ & 0.052 \\
+ & corrected DFT & 0.989 & $0.960 \pm 0.014$ & $0.910 \pm 0.020$ & 0.048 \\
+ & thesis DFT + counts & 0.989 & $0.964 \pm 0.009$ & $0.882 \pm 0.078$ & 0.050 \\
+ & corrected DFT + counts & 0.989 & $0.965 \pm 0.010$ & $\mathbf{0.913 \pm 0.025}$ & 0.047 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig_grouped_validation.png}
+\caption{Random Forest $R^2$ (mean of five folds, error bars one standard deviation) for the six feature sets under the four validation schemes on the referenced dataset.}
+\label{fig:grouped}
+\end{figure}
+
+\textit{The random split does not discriminate.} Every feature set that identifies the ions scores $R^2 = 0.98$--$0.99$ point-wise, whether its DFT descriptors are correct or not. Holding out whole ILs lowers $R^2$ to 0.94--0.97, and holding out whole anions to 0.81--0.91.
+
+\textit{Ion information is essential.} Temperature and pressure alone give $R^2 = 0.78$--0.80 for unseen anions. Any description of the ions adds 0.03--0.12.
+
+\textit{The corrected descriptors are clearly better than the thesis descriptors.} For unseen anions, $R^2$ rises from 0.81 to 0.89 (Random Forest) and from 0.86 to 0.91 (gradient boosting), and the fold-to-fold standard deviation falls from about 0.1 to 0.02--0.03. Adding the thesis descriptors to the atom counts makes the Random Forest worse for unseen anions (0.83 against 0.88), so the thesis descriptors behaved partly as noise.
+
+\textit{The corrected isolated-ion descriptors are not better than atom counts.} Ten corrected DFT descriptors and fifteen atom counts give the same accuracy within the fold-to-fold spread (0.89 and 0.88 for Random Forest, 0.91 and 0.90 for gradient boosting), and combining them adds nothing. At this level, the DFT descriptors mainly convey the size and identity of each ion. Their advantages are physical meaning and the ability to describe ions with elements or bonding not present in the training set, not higher accuracy on the present data.
+
+\subsection{Anions that are hard to predict}
+For gradient boosting with the corrected descriptors, the largest leave-anion-out errors are for [NfO]$^-$ (mean absolute error 0.12 in mole fraction, 48 points), [MeSO$_3$]$^-$ (0.09, 261 points), [NO$_3$]$^-$ (0.09, 240 points), [TCB]$^-$ (0.07, 130 points), [TFA]$^-$ (0.07, 138 points) and [MeSO$_4$]$^-$ (0.07, 380 points). Five of the six are oxygen-donor anions (sulfonates, a sulfate, nitrate and a carboxylate), whose interaction with \co{} may differ from that of the fluorinated anions that dominate the data. Each occurs with only two to seven cations, but so do several anions that are predicted well, so the small number of cations alone does not explain the errors. The largest improvement from the corrected descriptors is for [SCN]$^-$, whose error falls from 0.19 with the thesis descriptors to 0.06.
+
+\subsection{Feature importance in the thesis models}
+Fig.~\ref{fig:importance} shows permutation importances of the thesis Random Forest and Gradient Boosting models on the random test set, excluding atom counts. Pressure dominates, followed by temperature and the anion total energy. Because these models use the thesis descriptors and a random split, the ranking of the DFT descriptors should not be interpreted physically; the total energy in particular scales with the size and composition of an ion and acts largely as an identifier. Importances for the corrected descriptors under grouped validation will be reported with the next descriptor set (Section~\ref{sec:summary}).
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig_importance.pdf}
-\caption{Permutation importance of temperature, pressure and the ten DFT descriptors for Random Forest and Gradient Boosting (test set, 10 repeats, logarithmic scale). Atom counts are omitted.}
+\caption{Thesis models: permutation importance of temperature, pressure and the ten thesis DFT descriptors for Random Forest and Gradient Boosting (random test set, 10 repeats, logarithmic scale). Atom counts are omitted.}
 \label{fig:importance}
 \end{figure}

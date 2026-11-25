@@ -11,12 +11,12 @@ Fig.~\ref{fig:pipeline} summarises the workflow from ion names to model inputs.
   arr/.style={-{Stealth[length=2mm]}, thick}]
 \node[box] (names) {Ion names\\(84 ions)};
 \node[box, right=0.45cm of names] (smiles) {SMILES\\PubChem + manual};
-\node[box, right=0.45cm of smiles] (geom) {3D structure\\RDKit ETKDGv3\\+ UFF};
-\node[box, right=0.45cm of geom] (dft) {ORCA 6.0\\r2SCAN-3c\\Opt + Freq};
+\node[box, right=0.45cm of smiles] (geom) {3D structure\\RDKit ETKDGv3\\+ MMFF94};
+\node[box, right=0.45cm of geom] (dft) {ORCA 6\\r2SCAN-3c\\Opt + Freq};
 \node[box, below=0.9cm of dft] (desc) {Descriptors\\$E$, HOMO, LUMO,\\gap, dipole};
 \node[box, left=0.45cm of desc] (counts) {Atom counts\\(per element)};
-\node[dat, left=0.45cm of counts] (exp) {Experimental\\$T$, $P$, $\xco$\\(11,256 points)};
-\node[box, left=0.45cm of exp, fill=green!6] (ml) {ML models\\248 features};
+\node[dat, left=0.45cm of counts] (exp) {Experimental\\$T$, $P$, $\xco$};
+\node[box, left=0.45cm of exp, fill=green!6] (ml) {ML models};
 \draw[arr] (names) -- (smiles);
 \draw[arr] (smiles) -- (geom);
 \draw[arr] (geom) -- (dft);
@@ -25,23 +25,29 @@ Fig.~\ref{fig:pipeline} summarises the workflow from ion names to model inputs.
 \draw[arr] (counts) -- (exp);
 \draw[arr] (exp) -- (ml);
 \end{tikzpicture}
-\caption{Workflow from ion names to the 248-feature model input. Descriptors are computed for each isolated ion and joined to the experimental points by cation and anion.}
+\caption{Workflow from ion names to the model input. Descriptors are computed for each isolated ion and joined to the experimental points by cation and anion.}
 \label{fig:pipeline}
 \end{figure}
 
 \subsection{Structures}
-SMILES strings for the 84 ions were retrieved from PubChem\cite{kim2023pubchem} by ion name; ions that PubChem did not resolve were entered by hand (\path{data/ions/ions_with_smiles.csv}). Three-dimensional structures were generated with RDKit\cite{rdkit} using the ETKDGv3 embedding\cite{wang2020improving}, followed by a UFF force-field optimisation\cite{rappe1992uff}. One conformer was generated per ion. Structures are stored in \path{calculations/structures/}.
+SMILES strings for the 84 ions were retrieved from PubChem\cite{kim2023pubchem} by ion name; ions that PubChem did not resolve were entered by hand (\path{data/ions/ions_with_smiles.csv}). Every SMILES was checked to describe a single fragment with formal charge $+1$ (cations) or $-1$ (anions) and an even number of electrons; six that described a neutral molecule or an ion together with its counter-ion were corrected (Section~\ref{sec:issues}). Three-dimensional structures were generated with RDKit\cite{rdkit} using the ETKDGv3 embedding\cite{wang2020improving}, followed by an MMFF94 force-field optimisation\cite{halgren1996mmff}. One conformer was generated per ion. Structures are stored in \path{calculations/structures/}.
 
 \subsection{DFT calculations}
-Each ion was calculated in isolation in the gas phase with ORCA 6.0\cite{neese2022orca}. The method was the r2SCAN-3c composite\cite{grimme2021r2scan}, with a geometry optimisation followed by a frequency calculation (\texttt{! r2SCAN-3c Opt Freq}). Charges were $+1$ for cations and $-1$ for anions, with singlet multiplicity. Outputs are in \path{calculations/ions/}. Of the 84 ions, 78 finished normally; the six that did not are not represented in the training data.
+Each ion was calculated in isolation in the gas phase with ORCA\cite{neese2022orca}. The method was the r2SCAN-3c composite\cite{grimme2021r2scan}, with a geometry optimisation followed by a frequency calculation (\texttt{! r2SCAN-3c Opt Freq}). Charges were $+1$ for cations and $-1$ for anions, with singlet multiplicity. Outputs are in \path{calculations/ions/}.
+
+Most ions were calculated with ORCA 6.0.0. Nine ions were recalculated with ORCA 6.1.1: the six built from wrong SMILES, [PF$_6$]$^-$, whose original optimisation dissociated into PF$_5$ + F$^-$, and [HSO$_4$]$^-$ and [C$_3$F$_7$CO$_2$]$^-$, whose original structures had one imaginary frequency (Section~\ref{sec:issues}). [PF$_6$]$^-$ was restarted from an ideal octahedron, [HSO$_4$]$^-$ from its previous geometry with the O--H bond rotated by 60\textdegree, and [C$_3$F$_7$CO$_2$]$^-$ with tighter convergence criteria and a finer integration grid (\texttt{TightOpt}, \texttt{DefGrid3}). To check that the two program versions are interchangeable, [BMIM]$^+$ was recalculated with 6.1.1 from the same starting structure: the final energy agrees to $10^{-8}$~Hartree and the HOMO energy is identical. On macOS, the analytic r2SCAN-3c frequency calculation of ORCA 6.1.1 failed for ions above about 30 atoms; for these ([HMMIM]$^+$, [P$_{4,4,4,4}$]$^+$ and [C$_{12}$PhSO$_3$]$^-$) the frequencies were computed on the optimised geometry on the BRIN Mahameru cluster. All 76 ions of the thesis training set and all 61 ions of the referenced training set are true minima with no imaginary frequencies.
 
 \subsection{Descriptors}
-Five properties were taken from each ion's output:
+Five properties were taken from each ion's output at the optimised geometry:
 \begin{itemize}
     \item total electronic energy $E$ (Hartree);
     \item energy of the highest occupied molecular orbital, $E_{\mathrm{HOMO}}$ (Hartree);
     \item energy of the lowest unoccupied molecular orbital, $E_{\mathrm{LUMO}}$ (Hartree);
     \item HOMO--LUMO gap, $E_{\mathrm{LUMO}} - E_{\mathrm{HOMO}}$;
-    \item dipole moment (Debye).
+    \item magnitude of the dipole moment (Debye), taken with ORCA's default origin.
 \end{itemize}
-These were extracted with a parser in \path{notebooks/thesis/07-descriptor-extraction.ipynb}. Elemental atom counts were added for each ion, one column per element of the periodic table (\path{notebooks/thesis/09-add-atom-counts.ipynb}). The descriptors of the cation and the anion were joined to every experimental point of the corresponding IL. With temperature and pressure this gives 248 feature columns: 2 state variables, 10 DFT descriptors and 236 atom-count columns, of which 15 are non-zero for at least one ion (B, C, F, H, N, O, P and S in anions; C, F, H, N, O, P and S in cations).
+They were extracted with \path{scripts/extract_descriptors.py}, which reads the last energy, the last orbital-energy block and the dipole magnitude, and records convergence and the number of imaginary frequencies for each ion (\path{data/processed/dft_descriptors_r2scan3c.csv}). The parser used for the original thesis models read some of these values from the wrong part of the output (Section~\ref{sec:issues}); both descriptor sets are compared in Section~\ref{sec:results}. Elemental atom counts were added for each ion, one column per element of the periodic table, of which 15 are non-zero for at least one ion (B, C, F, H, N, O, P and S in anions; C, F, H, N, O, P and S in cations). The descriptors of the cation and the anion were joined to every experimental point of the corresponding IL.
+
+\subsection{Check of the descriptors against published values}
+\label{sec:desc-check}
+Absolute orbital energies from different methods are not directly comparable, so the descriptors were checked on their ordering. The anion and cation $-E_{\mathrm{HOMO}}$ values were compared with ionisation energies of the same ions computed at the B3LYP-D3(BJ)/6-311+G(d,p) level in an ionic-liquid-like continuum and aligned to valence photoelectron spectra\cite{fogarty2025dos}, and the HOMO--LUMO gaps with PBE-D3(BJ)/DZP gaps from an open ionic-liquid database\cite{stavarache2026xtb}. With the corrected descriptors the Spearman rank correlation is 0.82 for the 14 anions in common and 0.77 for the 9 cations; for the gaps it is 0.94 (6 anions) and 0.98 (13 cations). The HOMO energies used in the thesis models have a rank correlation of $-0.25$ with the published anion ionisation energies (\path{scripts/check_descriptors_vs_literature.py}). The remaining disagreement for anions, for example [TCB]$^-$ ranked too high and [BF$_4$]$^-$ too low, is consistent with the lack of diffuse functions in the r2SCAN-3c basis set, which affects gas-phase anion orbital energies.

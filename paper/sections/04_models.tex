@@ -1,13 +1,33 @@
-\section{Machine-Learning Models}
+\section{Machine-Learning Models and Validation}
 \label{sec:models}
 
-Four regressors were compared, all predicting $\xco$ from the 248 features:
+\subsection{Thesis protocol: random split}
+In the original thesis work, four regressors were trained on the thesis set with the thesis descriptors (248 feature columns: temperature, pressure, 10 DFT descriptors and 236 atom-count columns):
 \begin{itemize}
     \item \textbf{Ridge regression}\cite{hoerl1970ridge} with $\alpha = 1$, as a linear baseline;
     \item \textbf{Random Forest}\cite{breiman2001random} with 100 trees;
     \item \textbf{Gradient Boosting}\cite{friedman2001greedy} with 100 trees;
     \item \textbf{a neural network}: a fully connected network with hidden layers of 128, 64 and 32 ReLU units and dropout of 0.2 after the second layer, trained with Adam\cite{kingma2015adam} on mean squared error for 100 epochs with a batch size of 32, in Keras\cite{chollet2015keras}.
 \end{itemize}
-The first three use scikit-learn\cite{pedregosa2011scikit} with default settings apart from those listed; no hyperparameter search was performed.
+The first three use scikit-learn\cite{pedregosa2011scikit} with default settings apart from those listed. The dataset was split at random into 80\% training (9,004 points) and 20\% test (2,252 points) with a fixed seed, and features were standardised with a scaler fitted on the training set (\path{notebooks/thesis/17-final-model-comparison.ipynb}). These results are reported for comparison with the thesis only, because a random split of points does not measure prediction for new ILs (Section~\ref{sec:grouped}).
 
-The dataset was split at random into 80\% training (9,004 points) and 20\% test (2,252 points) with a fixed seed (\texttt{random\_state = 42}). Features were standardised with a scaler fitted on the training set. Performance on the test set is reported as $R^2$, mean absolute error (MAE) and root-mean-square error (RMSE), with errors in units of mole fraction. Feature importance was measured by permutation on the test set (10 repeats), as the drop in $R^2$ when one feature is shuffled. The analysis is in \path{notebooks/thesis/17-final-model-comparison.ipynb} and \path{notebooks/thesis/18-final-metrics-analysis.ipynb}. The final Random Forest was then retrained on all 11,256 points and saved in \path{models/thesis/} for screening.
+\subsection{Main protocol: grouped cross-validation}
+\label{sec:grouped-method}
+A typical IL contributes tens to hundreds of points along a few isotherms. With a random split, almost every test point has neighbours from the same IL, and often the same isotherm, in the training set, so the test score measures interpolation along a known isotherm. The main results therefore use the referenced dataset and four 5-fold cross-validation schemes that differ in what is held out together\cite{meredig2018can, cawley2010overfitting}:
+\begin{itemize}
+    \item \textbf{point-wise}: random points, as in the thesis protocol;
+    \item \textbf{leave-IL-out}: all points of an IL;
+    \item \textbf{leave-cation-out}: all ILs that share a cation;
+    \item \textbf{leave-anion-out}: all ILs that share an anion.
+\end{itemize}
+Leave-anion-out is the most demanding test and the most relevant one, because the anion controls physical \co{} solubility most strongly\cite{cadena2004why, anthony2005anion} and a screening study would vary the anion. The folds are identical for every feature set and model, so differences between feature sets are not due to different splits. $R^2$ and the mean absolute error (MAE, in mole fraction) are reported as the mean and standard deviation over the five folds.
+
+Two tree ensembles were used: a Random Forest with 300 trees and a histogram-based gradient-boosting model\cite{ke2017lightgbm} (scikit-learn \texttt{HistGradientBoostingRegressor}, 500 iterations, learning rate 0.05). Six feature sets were compared, all with temperature and pressure ($T$, $P$):
+\begin{itemize}
+    \item $T$, $P$ only;
+    \item $T$, $P$ and the 15 varying atom counts (ion identity and size, no quantum chemistry);
+    \item $T$, $P$ and the 10 thesis DFT descriptors;
+    \item $T$, $P$ and the 10 corrected DFT descriptors;
+    \item each of the two DFT sets together with the atom counts.
+\end{itemize}
+The analysis is in \path{scripts/compare_descriptor_sets.py}; per-anion errors of the leave-anion-out predictions are stored with the results in \path{paper/data/}.

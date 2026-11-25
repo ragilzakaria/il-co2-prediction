@@ -3,12 +3,12 @@
 
 This work has produced the following.
 \begin{itemize}
-    \item \textbf{Data.} A training set of 11,256 \co{} solubility points for 113 ILs, and a rebuilt dataset of 12,297 points from 160 publications, each with its DOI and measurement method.
-    \item \textbf{Calculations.} A pipeline from ion names to r2SCAN-3c optimised structures in ORCA 6.0 for 78 ions, with stored outputs.
-    \item \textbf{Models.} Four regressors, of which Random Forest performs best on a random split ($R^2 = 0.985$, MAE $= 0.017$). Pressure, temperature and the anion total energy are the most important features.
-    \item \textbf{Applications.} A screening tool that reproduces known trends for imidazolium ILs, and provisional predictions for two bio-based ILs relevant to Indonesian feedstocks.
+    \item \textbf{Data.} A thesis set of 11,256 \co{} solubility points for 113 ILs, and a referenced dataset of 12,297 points for 109 ILs from 160 publications, each with its DOI and measurement method.
+    \item \textbf{Calculations.} r2SCAN-3c optimised structures and frequencies for the ions of both training sets, all verified as minima, with stored outputs. Six ions built from wrong SMILES and three with failed optimisations were recalculated.
+    \item \textbf{Descriptors.} A corrected descriptor extraction whose orbital energies follow the published ordering of ion ionisation energies (rank correlation 0.82 for anions), where the thesis values did not ($-0.25$).
+    \item \textbf{Validation.} Grouped cross-validation shows that the random-split accuracy of the thesis ($R^2 = 0.985$) mostly measures interpolation along known isotherms. For ILs whose anion is absent from training, the best models reach $R^2 = 0.89$--0.91 with the corrected descriptors, against 0.81--0.86 with the thesis descriptors and 0.78--0.80 from temperature and pressure alone.
 \end{itemize}
-The checks in Section~\ref{sec:issues} show that the descriptors must be re-extracted and the models revalidated with grouped splits before the results can be published. The corrected parser and a grouped-validation script are available. Future work will retrain the models on the corrected descriptors and the referenced dataset, and extend the descriptor set beyond isolated-ion properties.
+The corrected isolated-ion descriptors are as informative as elemental atom counts, but not more. Improving on this requires descriptors of how the ions behave in the liquid and towards \co{}. Future work will therefore (i) benchmark the electronic-structure methods against coupled-cluster interaction energies of ion pairs, (ii) compute conformer-searched ions, ion pairs and anion--\co{} complexes and COSMO-RS $\sigma$-profiles and Henry constants, (iii) simulate the bulk liquids with molecular dynamics, and (iv) train models with uncertainty estimates, validated by holding out whole anions, before the screening is repeated.
 
 \section*{Data and Code Availability}
-All data, ORCA outputs, notebooks and trained models are in the project repository. The scripts that produce the figures in this manuscript and the checks in Section~\ref{sec:issues} are in \path{paper/code/} and \path{scripts/}.
+All data, ORCA outputs, notebooks, scripts and trained models are in the project repository. The figures and checks in this manuscript are produced by \path{paper/code/make_figures.py} and the scripts in \path{scripts/}, in particular \path{extract_descriptors.py}, \path{check_descriptors_vs_literature.py}, \path{merge_referenced_model_dataset.py} and \path{compare_descriptor_sets.py}.

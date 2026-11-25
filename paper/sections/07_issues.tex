@@ -1,39 +1,43 @@
-\section{Limitations of the Current Workflow}
+\section{Corrections and Remaining Limitations}
 \label{sec:issues}
 
-The workflow was checked against the raw calculation outputs and the notebooks. The problems found are listed here because they affect the numbers in Sections~\ref{sec:results} and~\ref{sec:screening}. They have not yet been corrected in the trained models. Table~\ref{tab:issues} gives an overview.
+The thesis workflow was checked against the raw calculation outputs and the notebooks. Table~\ref{tab:issues} lists what was found, what has been corrected in this version, and what remains open.
 
 \begin{table}[t]
-\caption{Limitations of the current workflow and their effect on the reported results.}
+\caption{Problems found in the thesis workflow and their status in this version.}
 \label{tab:issues}
 \centering
 \small
 \begin{tabularx}{\textwidth}{lXX}
 \toprule
-\textbf{Area} & \textbf{Issue} & \textbf{Effect} \\
+\textbf{Area} & \textbf{Problem} & \textbf{Status} \\
 \midrule
-Descriptors & Parser read the wrong lines of the ORCA output (Section~\ref{sec:issue-desc}). & DFT features in the models are partly wrong. \\
-Level of theory & Input files in \path{calculations/ions/} state B3LYP/def2-SVP single points; the outputs are r2SCAN-3c optimisations. & Method reported in earlier write-ups may be wrong. \\
-Convergence & [DCA] and [PF$_6$] optimisations stopped after 50 cycles; [C$_3$F$_7$CO$_2$] and [HSO$_4$] have one imaginary frequency. & Descriptors for these anions are unreliable; [DCA] and [PF$_6$] alone cover 1,583 training points. \\
-Validation & Random 80/20 split of points; most test ILs also appear in training. & Test scores measure interpolation, not prediction for new ILs. \\
-Bio-based ILs & Laurate computed with B97-3c; typed-in values differ from outputs; atom counts entered under wrong column names. & Oleate/laurate predictions are not reliable. \\
-Data source & Original source of \path{data/raw/rawdata.xlsx} not cited per point. & Partly resolved by the referenced dataset. \\
+Descriptors & Parser read the wrong lines of the ORCA output (Section~\ref{sec:issue-desc}). & Corrected; both descriptor sets compared in Table~\ref{tab:grouped}. \\
+Structures & Six SMILES described a neutral molecule or an ion with its counter-ion, so ORCA treated them as doublet radicals. & Corrected and recalculated. \\
+Convergence & [PF$_6$]$^-$ dissociated into PF$_5$ + F$^-$ during its optimisation; [HSO$_4$]$^-$ and [C$_3$F$_7$CO$_2$]$^-$ had one imaginary frequency. & Recalculated; all training ions are minima (Section~\ref{sec:comp}). \\
+Validation & Random 80/20 split of points; most test ILs also appear in training. & Replaced by grouped cross-validation (Section~\ref{sec:grouped}). \\
+Level of theory & One stray input file (\path{calculations/ions/BMIM.inp}) states a B3LYP/def2-SVP single point. & Not used; all descriptors are r2SCAN-3c. \\
+Descriptor physics & Gas-phase isolated ions, one conformer, no diffuse functions. & Open: corrected descriptors match atom counts but do not beat them (Section~\ref{sec:grouped}). \\
+Screening & Done with the thesis model. & Open: to be recomputed. \\
+Bio-based ILs & Laurate computed with B97-3c; typed-in values differ from outputs; atom counts entered under wrong column names. & Open: predictions not reliable (Section~\ref{sec:issue-bio}). \\
+Data source & Original source of \path{data/raw/rawdata.xlsx} not cited per point. & Resolved by the referenced dataset. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Descriptor extraction}
+\subsection{Descriptor extraction in the thesis models}
 \label{sec:issue-desc}
-The parser in \path{notebooks/thesis/07-descriptor-extraction.ipynb} was compared with the ORCA outputs for the 76 ions in the training set. Three errors were found:
+The parser in \path{notebooks/thesis/07-descriptor-extraction.ipynb} was compared with the ORCA outputs for the 76 ions in the thesis set. Three errors were found:
 \begin{itemize}
-    \item \textbf{Total energy} is the first \texttt{FINAL SINGLE POINT ENERGY} in the file, which belongs to the starting UFF geometry, not the optimised one. The median difference from the optimised energy is 0.004~Hartree, but it reaches 0.92~Hartree for [PF$_6$].
-    \item \textbf{HOMO energy} is the largest number found in any four-column table after the last orbital block, not only in the orbital block itself. For 39 of the 76 ions the stored HOMO is a value from an unrelated table and lies above the LUMO; for example, [BF$_4$] has a stored HOMO of $+0.657$~Hartree against $-0.110$~Hartree in the output. The LUMO is correct for 74 ions.
-    \item \textbf{Dipole moment} is the $x$ component of the dipole vector in atomic units, not the magnitude in Debye. When that component is negative the pattern does not match, the value is left empty and is later filled with zero; this happens for 44 of the 76 ions. Only 6 ions have a stored dipole within 0.1~D of the true magnitude.
+    \item \textbf{Total energy} was the first \texttt{FINAL SINGLE POINT ENERGY} in the file, which belongs to the starting geometry, not the optimised one. The median difference from the optimised energy is 0.004~Hartree, but it reached 0.92~Hartree for [PF$_6$]$^-$.
+    \item \textbf{HOMO energy} was the largest number found in any four-column table after the last orbital block, not only in the orbital block itself. For 39 of the 76 ions the stored HOMO was a value from an unrelated table and lay above the LUMO; for example, [BF$_4$]$^-$ had a stored HOMO of $+0.657$~Hartree against $-0.110$~Hartree in the output. The LUMO was correct for 74 ions.
+    \item \textbf{Dipole moment} was the $x$ component of the dipole vector in atomic units, not the magnitude in Debye. When that component was negative the pattern did not match, the value was left empty and later filled with zero; this happened for 44 of the 76 ions.
 \end{itemize}
-A corrected parser that reads the last energy, the last orbital block and the dipole magnitude in Debye is in \path{scripts/extract_descriptors.py}, and its output is in \path{data/processed/dft_descriptors_r2scan3c.csv}. The models have not yet been retrained with it. Because the HOMO and dipole features were partly noise, the importance ranking in Fig.~\ref{fig:importance} may change after correction.
+The corrected parser (\path{scripts/extract_descriptors.py}) reads the last energy, the last orbital-energy block and the dipole magnitude in Debye. Its HOMO energies follow the published ordering of ion ionisation energies, whereas the thesis values do not (Section~\ref{sec:desc-check}).
 
-\subsection{Validation by random split}
-A typical IL contributes tens to hundreds of points along a few isotherms (Fig.~\ref{fig:dataset}b). With a random split of points, almost every test point has neighbours from the same IL, and often the same isotherm, in the training set. As a quick check, the Random Forest (300 trees, same features) was re-evaluated on the training set with 5-fold cross-validation grouped by IL, so that all points of an IL are held out together (\path{scripts/check_validation.py}). $R^2$ falls from 0.986 on the random split to $0.937 \pm 0.027$, and MAE doubles from 0.017 to $0.036 \pm 0.005$. On the referenced dataset, holding out all ILs that share an anion lowers $R^2$ further to $0.83 \pm 0.13$, close to the 0.78 obtained from temperature and pressure alone. These checks used the stored (uncorrected) descriptors. They show that the reported accuracy is optimistic for new ILs, and that grouped validation should be used for this task\cite{meredig2018can, cawley2010overfitting}.
+\subsection{Limits of isolated-ion descriptors}
+The corrected descriptors are computed for one conformer of each ion in the gas phase. They do not describe the interaction between cation and anion, the interaction of either ion with \co{}, or the structure of the liquid, all of which control physical solubility. The r2SCAN-3c basis set has no diffuse functions, which makes gas-phase anion orbital energies less reliable. Consistent with this, the corrected descriptors predict unseen anions as well as elemental atom counts do, but not better (Table~\ref{tab:grouped}).
 
 \subsection{Bio-based IL inputs}
+\label{sec:issue-bio}
 The oleate and laurate predictions in Section~\ref{sec:screening} have four problems. First, the oleate anion was calculated with r2SCAN-3c like the training ions, but the laurate anion was calculated with B97-3c\cite{brandenburg2018b973c}. Second, the descriptor values typed into the prediction notebook do not all match the output files. The laurate total energy entered is $-1516.05$~Hartree against $-621.36$~Hartree in the output, and the dipole moments entered (13.5~D and 7.3~D) differ from the output magnitudes (34.9~D and 18.6~D). Third, the atom counts were entered under the names \texttt{anion\_C}, \texttt{anion\_H} and \texttt{anion\_O}, which do not exist in the model. The missing columns, including all cation counts, were therefore filled with zero. Fourth, imidazolium carboxylates can react with \co{} through the carbene formed at the C2 position of the ring, which a physical-solubility model does not describe.
