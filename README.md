@@ -75,7 +75,11 @@ ORCA 6 is needed for the calculations. It is free for academic use and must be i
 
 ## Known issues
 
-- **[PF6]⁻ broke apart in its r2SCAN-3c optimisation.** The run stopped at the 50-cycle limit with one P–F bond at 2.87 Å (PF₅ + F⁻), and the stored HOMO is +2.4 eV. Every [PF6] descriptor is therefore invalid. That affects 1,320 of the 11,256 thesis training points and 1,557 of the 12,297 referenced points. Rerun [PF6] from an octahedral start.
+- **[PF6]⁻ broke apart in its thesis r2SCAN-3c optimisation. Fixed 25 November 2026.**
+  - The thesis run stopped at the 50-cycle limit with one P–F bond at 2.87 Å (PF₅ + F⁻) and a HOMO of +2.4 eV. That affected 1,320 of the 11,256 thesis training points and 1,557 of the 12,297 referenced points.
+  - The rerun (ORCA 6.1.1, started from an octahedron) is an intact octahedron: all six P–F bonds at 1.642 Å, no imaginary modes, HOMO −3.79 eV.
+  - The old run is in `calculations/ions/old_failed/`.
+  - `data/processed/` has not yet been re-extracted with the new [PF6] values.
 - **[C3F7CO2]⁻ and [HSO4]⁻ have imaginary frequencies.** They need re-optimising. Together with [PF6] and the six wrong-species ions, that makes 9 ions to rerun.
 - **The thesis HOMO values for anions do not follow the published ordering at all** (Spearman ρ = −0.25). The corrected parser gives ρ = 0.83 once [PF6] is excluded. See `scripts/check_descriptors_vs_literature.py`.
 - `calculations/ions/BMIM.inp` is a leftover B3LYP/def2-SVP single-point input. It does not match `BMIM.out`, which is the r2SCAN-3c optimisation actually used.

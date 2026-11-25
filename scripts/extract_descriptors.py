@@ -68,7 +68,7 @@ def parse(path):
     text = open(path, errors="ignore").read()
     if "ORCA TERMINATED NORMALLY" not in text:
         return None
-    method = re.search(r"\|\s*1>\s*!\s*(.+)", text).group(1).strip()
+    method = re.search(r"\|\s*\d+>\s*!\s*(.+)", text).group(1).strip()
     energies = re.findall(r"FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)", text)
     dipoles = re.findall(r"Magnitude \(Debye\)\s*:\s*(\d+\.\d+)", text)
     homo, lumo = last_orbital_block(text)
