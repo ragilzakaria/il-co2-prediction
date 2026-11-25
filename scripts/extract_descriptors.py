@@ -66,8 +66,22 @@ def dipole_from_components(text):
 
 def parse(path):
     text = open(path, errors="ignore").read()
-    if "ORCA TERMINATED NORMALLY" not in text:
+    normal = "ORCA TERMINATED NORMALLY" in text
+    opt_done = ("OPTIMIZATION RUN DONE" in text) or ("HAS CONVERGED" in text)
+    # Accept a finished optimisation whose analytic frequency step crashed (ORCA 6.1.1 on
+    # macOS segfaults in the r2SCAN XC Hessian for ions above ~30 atoms): the descriptors
+    # come from the optimised geometry; only the minimum check is missing.
+    if not normal and not opt_done:
         return None
+    if "VIBRATIONAL FREQUENCIES" in text:
+        freq_status, n_imag = "analytic", len(re.findall(r"\*\*\*imaginary mode\*\*\*", text))
+    else:
+        freq_status, n_imag = ("crashed" if not normal else "none"), None
+    numfreq = path[:-len(".out")] + ".numfreq.out"
+    if os.path.exists(numfreq):
+        nf = open(numfreq, errors="ignore").read()
+        if "ORCA TERMINATED NORMALLY" in nf and "VIBRATIONAL FREQUENCIES" in nf:
+            freq_status, n_imag = "numerical", len(re.findall(r"\*\*\*imaginary mode\*\*\*", nf))
     method = re.search(r"\|\s*\d+>\s*!\s*(.+)", text).group(1).strip()
     energies = re.findall(r"FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)", text)
     dipoles = re.findall(r"Magnitude \(Debye\)\s*:\s*(\d+\.\d+)", text)
@@ -79,8 +93,9 @@ def parse(path):
         "LUMO_Eh": lumo,
         "HOMO_LUMO_Gap_Eh": lumo - homo,
         "Dipole_Moment_Debye": float(dipoles[-1]) if dipoles else dipole_from_components(text),
-        "opt_converged": ("OPTIMIZATION RUN DONE" in text) or ("HAS CONVERGED" in text),
-        "n_imaginary": len(re.findall(r"\*\*\*imaginary mode\*\*\*", text)),
+        "opt_converged": opt_done,
+        "n_imaginary": n_imag,
+        "freq_status": freq_status,
         "n_opt_cycles": len(energies),
     }
 
@@ -102,7 +117,9 @@ def main():
     print(f"[descriptors] methods: {df['method'].value_counts().to_dict()}")
     print(f"[descriptors] not converged: {df.loc[~df.opt_converged, 'ion_abbreviation'].tolist()}")
     print(f"[descriptors] with imaginary modes: "
-          f"{df.loc[df.n_imaginary > 0, 'ion_abbreviation'].tolist()}")
+          f"{df.loc[df.n_imaginary.fillna(0) > 0, 'ion_abbreviation'].tolist()}")
+    print(f"[descriptors] frequency check missing: "
+          f"{df.loc[df.n_imaginary.isna(), 'ion_abbreviation'].tolist()}")
     print(f"[descriptors] no usable output: {missing}")
 
 
