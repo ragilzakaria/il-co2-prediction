@@ -1,29 +1,52 @@
 """
-Merges the new referenced NIST experimental dataset with pre-calculated ORCA DFT descriptors
-and elemental atomic counts, producing the final model-ready training dataset with full provenance.
+Merges the referenced NIST experimental dataset with per-ion DFT descriptors and elemental
+atom counts, producing the model-ready training table with full provenance.
+
+Two descriptor sets:
+  r2scan3c (default)  data/processed/dft_descriptors_r2scan3c.csv, corrected parser and the
+                      reruns of 25 Nov 2026  ->  data/processed/final_referenced_model_dataset_r2scan3c.csv
+  thesis              data/processed/orca_descriptors_individual.csv, the values the thesis model used
+                      ->  data/processed/final_referenced_model_dataset.csv (reproduces the existing file)
+
+Usage, from the repository root:
+    python scripts/merge_referenced_model_dataset.py               # corrected descriptors
+    python scripts/merge_referenced_model_dataset.py --thesis      # thesis descriptors
 """
 
+import argparse
 import os
 import pandas as pd
 import numpy as np
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 EXP_FILE = os.path.join(DATA_DIR, "processed", "referenced_co2_solubility_dataset.csv")
-DESC_FILE = os.path.join(DATA_DIR, "processed", "orca_descriptors_individual.csv")
+DESC_FILE_THESIS = os.path.join(DATA_DIR, "processed", "orca_descriptors_individual.csv")
+DESC_FILE = os.path.join(DATA_DIR, "processed", "dft_descriptors_r2scan3c.csv")
 ATOM_FILE = os.path.join(DATA_DIR, "ions", "ions_with_atomic_counts.csv")
-OUT_FILE = os.path.join(DATA_DIR, "processed", "final_referenced_model_dataset.csv")
+OUT_FILE_THESIS = os.path.join(DATA_DIR, "processed", "final_referenced_model_dataset.csv")
+OUT_FILE = os.path.join(DATA_DIR, "processed", "final_referenced_model_dataset_r2scan3c.csv")
+DESCRIPTOR_COLUMNS = ["ion_abbreviation", "Energy_Hartree", "HOMO_Eh", "LUMO_Eh", "HOMO_LUMO_Gap_Eh",
+                      "Dipole_Moment_Debye"]
 
 def standardize_name(series):
     return series.str.strip().str.replace(r'[+\[\]()-]', '', regex=True)
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--thesis", action="store_true", help="use the thesis descriptor file")
+    args = ap.parse_args()
+    desc_file = DESC_FILE_THESIS if args.thesis else DESC_FILE
+    out_file = OUT_FILE_THESIS if args.thesis else OUT_FILE
+
     if not os.path.exists(EXP_FILE):
         print(f"Experimental dataset not found yet: {EXP_FILE}")
         return
 
     print("Loading datasets...")
     df_exp = pd.read_csv(EXP_FILE)
-    df_desc = pd.read_csv(DESC_FILE)
+    df_desc = pd.read_csv(desc_file)
+    if not args.thesis:
+        df_desc = df_desc[DESCRIPTOR_COLUMNS]
     df_atoms = pd.read_csv(ATOM_FILE)
 
     # 1. Ensure HOMO-LUMO gaps are calculated for individual ions
@@ -56,7 +79,15 @@ def main():
     # Drop temporary merge keys
     drop_temp = [c for c in ['cation_merge_key', 'anion_merge_key', 'merge_key_x', 'merge_key_y', 'cation_ion_abbreviation', 'anion_ion_abbreviation'] if c in df_final.columns]
     df_final.drop(columns=drop_temp, inplace=True)
-    df_final.fillna(0, inplace=True)
+    if args.thesis:
+        df_final.fillna(0, inplace=True)  # thesis behaviour, kept so the old file is reproduced
+    else:
+        desc = [c for c in df_final.columns if c.endswith(("_Eh", "_Debye", "_Hartree"))]
+        missing = df_final[desc].isna().any(axis=1)
+        if missing.any():
+            bad = df_final.loc[missing, ["cation", "anion"]].drop_duplicates().values.tolist()
+            raise SystemExit(f"Missing descriptors for {missing.sum()} rows, pairs: {bad}")
+        df_final.fillna(0, inplace=True)  # atom counts only
 
     # 5. Organize column order
     id_cols = ['cation', 'cation_ion_name', 'anion', 'anion_ion_name']
@@ -70,8 +101,8 @@ def main():
     final_order_existing = [col for col in final_order if col in df_final.columns]
     df_final = df_final[final_order_existing]
 
-    df_final.to_csv(OUT_FILE, index=False)
-    print(f"\nFinal model-ready dataset saved to: {OUT_FILE}")
+    df_final.to_csv(out_file, index=False)
+    print(f"\nFinal model-ready dataset saved to: {out_file}")
     print(f"Shape: {df_final.shape[0]} rows, {df_final.shape[1]} columns.")
     print(f"Unique IL pairs in final model dataset: {df_final.groupby(['cation', 'anion']).size().shape[0]}")
 

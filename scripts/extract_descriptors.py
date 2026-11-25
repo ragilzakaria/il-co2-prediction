@@ -83,11 +83,15 @@ def parse(path):
     stem = path[:-len(".out")]
     extra = [(stem + ".numfreq.out", "numerical"),
              (os.path.join(ROOT, "calculations", "hpc", "batch01", os.path.basename(stem) + ".freq.out"), "analytic (HPC)")]
+    freq_dipoles = []
     for f, label in extra:
         if os.path.exists(f):
             nf = open(f, errors="ignore").read()
             if "ORCA TERMINATED NORMALLY" in nf and "VIBRATIONAL FREQUENCIES" in nf:
                 freq_status, n_imag = label, len(re.findall(r"\*\*\*imaginary mode\*\*\*", nf))
+                # The frequency job is run on the optimised geometry, so its dipole is that
+                # geometry's dipole; used when the optimisation output stopped before printing it.
+                freq_dipoles = re.findall(r"Magnitude \(Debye\)\s*:\s*(\d+\.\d+)", nf)
     method = re.search(r"\|\s*\d+>\s*!\s*(.+)", text).group(1).strip()
     energies = re.findall(r"FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)", text)
     dipoles = re.findall(r"Magnitude \(Debye\)\s*:\s*(\d+\.\d+)", text)
@@ -98,7 +102,8 @@ def parse(path):
         "HOMO_Eh": homo,
         "LUMO_Eh": lumo,
         "HOMO_LUMO_Gap_Eh": lumo - homo,
-        "Dipole_Moment_Debye": float(dipoles[-1]) if dipoles else dipole_from_components(text),
+        "Dipole_Moment_Debye": (float(dipoles[-1]) if dipoles else
+                                float(freq_dipoles[-1]) if freq_dipoles else dipole_from_components(text)),
         "opt_converged": opt_done,
         "n_imaginary": n_imag,
         "freq_status": freq_status,

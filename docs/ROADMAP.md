@@ -40,10 +40,10 @@ Goal: an **honest baseline**, using the same model type as the thesis but with c
 
 | Step | What | Who | Status |
 |---|---|---|---|
-| 1.1 | Rerun the 9 broken ions | ORCA (laptop + HPC) | 4 done; 5 in HPC batch 01 |
-| 1.2 | Re-extract descriptors; literature check | Claude | after 1.1 |
-| 1.3 | Rebuild the training table with corrected descriptors (the merge script still reads the old thesis file) | Claude | after 1.2 |
-| 1.4 | Retrain with leave-IL-out and leave-anion-out validation; compare thesis descriptors, corrected descriptors, and T + P only | Claude (laptop) | after 1.3 |
+| 1.1 | Rerun the 9 broken ions | ORCA (laptop + HPC) | **done** 25 Nov |
+| 1.2 | Re-extract descriptors; literature check | Claude | **done**: anion HOMO rank ρ = 0.82 (thesis −0.25) |
+| 1.3 | Rebuild the training table with corrected descriptors | Claude | **done**: `final_referenced_model_dataset_r2scan3c.csv` |
+| 1.4 | Retrain with leave-IL-out and leave-anion-out validation; compare thesis descriptors, corrected descriptors, and T + P only | Claude (laptop) | **next** |
 | 1.5 | Update manuscript sections 5–7 with the honest numbers | Claude + you | after 1.4 |
 
 **Decision point A:** do the DFT descriptors beat T + P alone for unseen anions? If they barely do, that motivates Phase 3: better, more physical descriptors.
@@ -117,8 +117,8 @@ GROMACS 2023.3 is installed on Mahameru. Still to check: whether GPU nodes are a
 
 ## Where things stand (25 Nov 2026)
 
-- HPC job **575841** (batch 01, the last 5 reruns) is running.
-- The ion-pair benchmark (Phase 2.1) is ready to submit: `calculations/benchmark_ion_pairs/`.
+- Phase 1.1–1.3 done: all 9 ions fixed, descriptors re-extracted, corrected training table built.
+- HPC job **575850** (ion-pair benchmark, Phase 2.1) is queued.
 
 ## Working rules
 

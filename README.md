@@ -10,10 +10,11 @@ The project started as an undergraduate thesis (UGM Chemistry, 2026) and continu
   - It scores R² = 0.986 on a random 80/20 split.
   - Grouped validation shows this is optimistic for new ILs: holding out each IL in turn gives R² ≈ 0.94, and holding out each anion gives R² ≈ 0.83 (`paper/data/results.json`).
 - **Rebuilt dataset.** 12,297 points for 109 ILs from NIST ILThermo, each point with its citation. Not yet used for training.
-- **Fixes in progress.**
-  - Six ions were calculated as the wrong species. Their inputs have been rebuilt; the calculations still need to be run.
-  - The descriptor parser has been corrected.
-  - Next: re-extract the descriptors, then retrain with grouped validation.
+- **Data fixed (25 November 2026).**
+  - All 9 broken ions were rerun with ORCA 6.1.1: six built from the wrong species, [PF6] (dissociated), and [HSO4] and [C3F7CO2] (imaginary modes). All are now minima with no imaginary modes.
+  - The descriptors were re-extracted with the corrected parser (`data/processed/dft_descriptors_r2scan3c.csv`).
+  - A corrected training table has been built: `data/processed/final_referenced_model_dataset_r2scan3c.csv`.
+  - Next: retrain with grouped validation (roadmap step 1.4).
 - **Next stage** (BRIN HPC): a better QM protocol (conformer search, ion pairs, CO₂ complexes, COSMO-RS), MD of the bulk liquids, and ML with uncertainty estimates.
 - **Validation rule.** Every new computed output is checked against published values in `data/literature_reference/`.
 
@@ -82,7 +83,9 @@ ORCA 6 is needed for the calculations. It is free for academic use and must be i
   - The rerun (ORCA 6.1.1, started from an octahedron) is an intact octahedron: all six P–F bonds at 1.642 Å, no imaginary modes, HOMO −3.79 eV.
   - The old run is in `calculations/ions/old_failed/`.
   - `data/processed/` has not yet been re-extracted with the new [PF6] values.
-- **[C3F7CO2]⁻ and [HSO4]⁻ have imaginary frequencies.** They need re-optimising. Together with [PF6] and the six wrong-species ions, that makes 9 ions to rerun.
+- **[C3F7CO2]⁻ and [HSO4]⁻ had imaginary frequencies. Fixed.** [HSO4] was re-optimised with its O–H rotated; [C3F7CO2] with TightOpt and DefGrid3. The six wrong-species ions are also done.
+  - [HMMIM], [P4,4,4,4] and [C12PhSO3] were optimised on the laptop and their frequencies run on Mahameru (`calculations/hpc/batch01/`), because the macOS ORCA crashes on them. [DBPO4] and [C3F7CO2] ran entirely on Mahameru.
+- **No frequency check yet for [N1,8,8,8], [P6,6,6,14] and [oleyl-MIM]** (the thesis frequency step crashed). They are not in the training data. Check them on Mahameru before using them.
 - **The thesis HOMO values for anions do not follow the published ordering at all** (Spearman ρ = −0.25). The corrected parser gives ρ = 0.83 once [PF6] is excluded. See `scripts/check_descriptors_vs_literature.py`.
 - `calculations/ions/BMIM.inp` is a leftover B3LYP/def2-SVP single-point input. It does not match `BMIM.out`, which is the r2SCAN-3c optimisation actually used.
 - The thesis notebooks refer to some folders that no longer exist (`orca_calculations/`, `calculations_individual/`). These were mapped to `calculations/candidates/` and `calculations/ions/`. The notebooks have not been re-run since the move.

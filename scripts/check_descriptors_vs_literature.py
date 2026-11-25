@@ -12,7 +12,7 @@ continuum), so the check is on ordering (Spearman rank correlation) and on linea
   current  data/processed/dft_descriptors_r2scan3c.csv  (corrected parser)
   thesis   data/processed/orca_descriptors_individual.csv (values used to train the thesis model)
 
-Ions whose stored outputs were calculated as the wrong species are excluded.
+Ions whose thesis values came from wrong-species calculations are excluded from the thesis set.
 
 Writes data/processed/checks/descriptors_vs_literature.csv and
 images/checks/descriptors_vs_literature.png, and prints a summary.
@@ -36,13 +36,16 @@ OUT_CSV = ROOT / "data" / "processed" / "checks" / "descriptors_vs_literature.cs
 OUT_PNG = ROOT / "images" / "checks" / "descriptors_vs_literature.png"
 
 HARTREE_EV = 27.211386
-# Outputs in calculations/ions/ for these were computed as the wrong species (see commit 0953722).
+# The thesis descriptors for these came from wrong-species calculations (commit 0953722); they are
+# excluded from the thesis set only. The current set uses the reruns of 25 Nov 2026.
 WRONG_SPECIES = {"[DCA]", "[DBPO4]", "[C12PhSO3]", "[MDEA]", "[HMMIM]", "[P4,4,4,4]"}
 
 
 def load_ours(path, label):
     d = pd.read_csv(path)
-    d = d[~d["ion_abbreviation"].isin(WRONG_SPECIES)].copy()
+    if label == "thesis":
+        d = d[~d["ion_abbreviation"].isin(WRONG_SPECIES)]
+    d = d.copy()
     d["neg_HOMO_eV"] = -d["HOMO_Eh"] * HARTREE_EV
     d["gap_eV"] = (d["LUMO_Eh"] - d["HOMO_Eh"]) * HARTREE_EV
     d["set"] = label
