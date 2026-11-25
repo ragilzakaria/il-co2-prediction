@@ -77,11 +77,17 @@ def parse(path):
         freq_status, n_imag = "analytic", len(re.findall(r"\*\*\*imaginary mode\*\*\*", text))
     else:
         freq_status, n_imag = ("crashed" if not normal else "none"), None
-    numfreq = path[:-len(".out")] + ".numfreq.out"
-    if os.path.exists(numfreq):
-        nf = open(numfreq, errors="ignore").read()
-        if "ORCA TERMINATED NORMALLY" in nf and "VIBRATIONAL FREQUENCIES" in nf:
-            freq_status, n_imag = "numerical", len(re.findall(r"\*\*\*imaginary mode\*\*\*", nf))
+    # A separate frequency job on the optimised geometry, if there is one:
+    #   <ion>.numfreq.out  numerical frequencies (laptop)
+    #   calculations/hpc/batch01/<ion>.freq.out  analytic frequencies (Mahameru)
+    stem = path[:-len(".out")]
+    extra = [(stem + ".numfreq.out", "numerical"),
+             (os.path.join(ROOT, "calculations", "hpc", "batch01", os.path.basename(stem) + ".freq.out"), "analytic (HPC)")]
+    for f, label in extra:
+        if os.path.exists(f):
+            nf = open(f, errors="ignore").read()
+            if "ORCA TERMINATED NORMALLY" in nf and "VIBRATIONAL FREQUENCIES" in nf:
+                freq_status, n_imag = label, len(re.findall(r"\*\*\*imaginary mode\*\*\*", nf))
     method = re.search(r"\|\s*\d+>\s*!\s*(.+)", text).group(1).strip()
     energies = re.findall(r"FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)", text)
     dipoles = re.findall(r"Magnitude \(Debye\)\s*:\s*(\d+\.\d+)", text)

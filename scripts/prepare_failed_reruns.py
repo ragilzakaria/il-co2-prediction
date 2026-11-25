@@ -6,7 +6,8 @@
               Restart from the old final geometry with the H rotated by 60 degrees about
               the S-O(H) bond.
   [C3F7CO2]-  ended with one tiny imaginary mode (-7 cm-1, an almost free CF3 rotation).
-              Restart from the old final geometry with TightOpt.
+              TightOpt alone kept it (-7.2 cm-1), so restart from the old final geometry
+              with TightOpt and the finer DefGrid3 integration grid.
 
 The old outputs are moved to calculations/ions/old_failed/ (by git mv, outside this
 script). The new inputs embed their coordinates, as the inputs written by
@@ -76,8 +77,8 @@ def main():
 
     # C3F7CO2-: old final geometry, tighter optimisation
     atoms = last_geometry(OLD / "C3F7CO2.out")
-    write_input("C3F7CO2", "r2SCAN-3c TightOpt Freq MiniPrint", atoms,
-                comment="old final geometry, TightOpt; old run had one -7 cm-1 mode")
+    write_input("C3F7CO2", "r2SCAN-3c TightOpt Freq DefGrid3 MiniPrint", atoms,
+                comment="old final geometry, TightOpt + DefGrid3; old run had one -7 cm-1 mode")
 
 
 if __name__ == "__main__":

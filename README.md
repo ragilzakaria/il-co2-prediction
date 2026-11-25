@@ -17,6 +17,8 @@ The project started as an undergraduate thesis (UGM Chemistry, 2026) and continu
 - **Next stage** (BRIN HPC): a better QM protocol (conformer search, ion pairs, CO₂ complexes, COSMO-RS), MD of the bulk liquids, and ML with uncertainty estimates.
 - **Validation rule.** Every new computed output is checked against published values in `data/literature_reference/`.
 
+**Plan:** see [docs/ROADMAP.md](docs/ROADMAP.md) for the phases, steps and decision points.
+
 ## Layout
 
 ```
