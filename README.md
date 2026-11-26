@@ -45,7 +45,6 @@ notebooks/
 models/
   thesis/                 thesis Random Forest, scaler and feature names (used by demo/)
 paper/                    manuscript (LaTeX); paper/code/make_figures.py makes its figures
-slides/                   BRIN sharing-session deck (source + standalone index.html)
 demo/                     Flask web demo of the thesis model
 images/                   thesis figures, 2D structures and result plots
 ```
