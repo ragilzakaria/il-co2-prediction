@@ -1,6 +1,6 @@
 # Research roadmap: CO₂ solubility in ionic liquids
 
-Last updated: 25 November 2026. Time estimates are rough and assume HPC queue times like today's.
+Last updated: 26 November 2026. Time estimates are rough and assume HPC queue times like today's.
 
 ## The goal in one sentence
 
@@ -10,7 +10,7 @@ Predict CO₂ solubility in ionic liquids, **including liquids the model has nev
 
 ```
 Phase 0  Thesis + clean-up             DONE
-Phase 1  Fix the thesis-level data     NOW        → honest baseline (paper v1 numbers)
+Phase 1  Fix the thesis-level data     DONE       → honest baseline (paper v1 numbers)
 Phase 2  Choose and validate methods   NOW        → documented QM protocol
 Phase 3  New QM descriptors            next       → physical descriptors for all ions and pairs
 Phase 4  Molecular dynamics            parallel   → bulk-liquid properties and features
@@ -18,7 +18,7 @@ Phase 5  ML v2                         after 3–4  → final model with uncerta
 Phase 6  Paper + pipeline              end        → publication and pipeline handed to BRIN
 ```
 
-Phases 1 and 2 run at the same time now. Phase 4 can start during Phase 3.
+Phase 1 is done; Phase 2 is under way. Phase 4 can start during Phase 3.
 
 ---
 
@@ -66,14 +66,27 @@ Goal: an **honest baseline**, using the same model type as the thesis but with c
 
 Goal: a QM protocol that is **proven** against high-level references before it is used on everything.
 
-| Step | What | Check against |
-|---|---|---|
-| 2.1 | Ion-pair benchmark: 66 published structures, r²SCAN-3c and ωB97X-D3/def2-TZVPD (± counterpoise) | CCSD(T) values from Karu 2018 and IL-2013. Target: mean absolute deviation < 5 kJ/mol |
-| 2.2 | Test parallel ORCA on Mahameru (`openmpi4/4.1.4`, `%pal`) | speed-up versus one core |
-| 2.3 | Anion orbitals with diffuse functions (ωB97X-D3/def2-TZVPD single points) | published ionisation energies (rank order) |
-| 2.4 | Write the protocol down (`docs/QM_PROTOCOL.md`) | — |
+| Step | What | Check against | Status |
+|---|---|---|---|
+| 2.1 | Ion-pair benchmark: 66 published structures, r²SCAN-3c and ωB97X-D3/def2-TZVPD (± counterpoise) | CCSD(T) values from Karu 2018 and IL-2013. Target: mean absolute deviation < 5 kJ/mol | **done** 26 Nov: `calculations/benchmark_ion_pairs/RESULTS.md` |
+| 2.2 | Test parallel ORCA on Mahameru (`openmpi4/4.1.4`, `%pal`) | speed-up versus one core | to do |
+| 2.3 | Anion orbitals with diffuse functions (ωB97X-D3/def2-TZVPD single points) | published ionisation energies (rank order) | to do |
+| 2.4 | Write the protocol down (`docs/QM_PROTOCOL.md`) | — | drafted 26 Nov; finish after 2.2–2.3 |
 
 **Decision point B:** which method to use for energies and for orbitals.
+
+**Answer (26 Nov 2026): r²SCAN-3c geometries and frequencies, ωB97X-D3/def2-TZVPD single points for energies and orbitals, no counterpoise.** Mean absolute deviation from CCSD(T) over the 66 ion pairs, kJ/mol:
+
+| Method | All 66 | Without [Cl]⁻ | [Cl]⁻ only | Time per pair |
+|---|---|---|---|---|
+| r²SCAN-3c | 6.0 | 4.1 | 17.9 | ~2 min |
+| ωB97X-D3/def2-TZVPD | **3.7** | **3.0** | 8.2 | ~30 min |
+| ωB97X-D3/def2-TZVPD + counterpoise | 4.0 | 3.2 | 9.0 | more runs |
+
+- ωB97X-D3/def2-TZVPD meets the target for every anion; counterpoise does not help, so it is dropped.
+- r²SCAN-3c is about 35 times cheaper and good enough for geometries, but overbinds chloride by 12–33 kJ/mol.
+- All methods rank the pairs almost like the reference (rank correlation 0.98–0.99).
+- Not yet tested: r²SCAN-3c geometries instead of the published ones, and the sulfate, phosphate, carboxylate and nitrate anions of the training set.
 
 ## Phase 3: new QM descriptors (about 3–5 weeks, HPC)
 
@@ -129,10 +142,12 @@ GROMACS 2023.3 is installed on Mahameru. Still to check: whether GPU nodes are a
 
 ---
 
-## Where things stand (25 Nov 2026)
+## Where things stand (26 Nov 2026)
 
 - **Phase 1 done** (25 Nov): all 9 ions fixed, descriptors re-extracted, corrected training table built, grouped comparison run (decision A answered), manuscript updated.
-- HPC job **575850** (ion-pair benchmark, Phase 2.1) is queued.
+- **Phase 2.1 done** (26 Nov): ion-pair benchmark finished (HPC job 575850); decision B answered. Protocol drafted in `docs/QM_PROTOCOL.md`.
+- Frequency checks for [N1,8,8,8], [P6,6,6,14] and [oleyl-MIM] done on Mahameru (batch02): all 83 computed ions are verified minima.
+- Next: steps 2.2 (parallel ORCA) and 2.3 (anion orbitals with diffuse functions), which can share one HPC job.
 
 ## Working rules
 

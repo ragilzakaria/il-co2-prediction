@@ -20,6 +20,8 @@ The project started as an undergraduate thesis (UGM Chemistry, 2026) and continu
 
 **Plan:** see [docs/ROADMAP.md](docs/ROADMAP.md) for the phases, steps and decision points.
 
+**QM protocol:** [docs/QM_PROTOCOL.md](docs/QM_PROTOCOL.md): r²SCAN-3c geometries, ωB97X-D3/def2-TZVPD single points (benchmarked against CCSD(T)).
+
 ## Layout
 
 ```

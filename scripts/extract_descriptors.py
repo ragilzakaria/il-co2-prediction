@@ -19,6 +19,7 @@ Run from the repository root:
     python scripts/extract_descriptors.py
 """
 
+import glob
 import os
 import re
 
@@ -79,10 +80,11 @@ def parse(path):
         freq_status, n_imag = ("crashed" if not normal else "none"), None
     # A separate frequency job on the optimised geometry, if there is one:
     #   <ion>.numfreq.out  numerical frequencies (laptop)
-    #   calculations/hpc/batch01/<ion>.freq.out  analytic frequencies (Mahameru)
+    #   calculations/hpc/batch*/<ion>.freq.out  analytic frequencies (Mahameru)
     stem = path[:-len(".out")]
-    extra = [(stem + ".numfreq.out", "numerical"),
-             (os.path.join(ROOT, "calculations", "hpc", "batch01", os.path.basename(stem) + ".freq.out"), "analytic (HPC)")]
+    extra = [(stem + ".numfreq.out", "numerical")] + [
+        (f, "analytic (HPC)") for f in sorted(glob.glob(
+            os.path.join(ROOT, "calculations", "hpc", "batch*", glob.escape(os.path.basename(stem)) + ".freq.out")))]
     freq_dipoles = []
     for f, label in extra:
         if os.path.exists(f):
