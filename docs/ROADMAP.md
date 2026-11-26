@@ -159,7 +159,9 @@ GROMACS 2023.3 is installed on Mahameru. Still to check: whether GPU nodes are a
 - **Phase 1 done** (25 Nov): all 9 ions fixed, descriptors re-extracted, corrected training table built, grouped comparison run (decision A answered), manuscript updated.
 - **Phase 2.1 done** (26 Nov): ion-pair benchmark finished (HPC job 575850); decision B answered. Protocol drafted in `docs/QM_PROTOCOL.md`.
 - Frequency checks for [N1,8,8,8], [P6,6,6,14] and [oleyl-MIM] done on Mahameru (batch02): all 83 computed ions are verified minima.
-- Next: steps 2.2 (parallel ORCA) and 2.3 (anion orbitals with diffuse functions), which can share one HPC job.
+- Steps 2.2 and 2.3 running on Mahameru (job 576022, started 26 Nov 13:10). First result: parallel ORCA works with `openmpi4/4.1.4` ([Tf2N] single point 798 s on 1 core, 222 s on 4, 70 s on 16).
+- Per-IL errors on the curated set (`scripts/per_il_errors.py`, 26 Nov; tables `paper/data/per_*_errors_curated.csv`, figure `images/checks/per_il_errors.png`). Gradient boosting, MAE in x(CO₂): leave-one-IL-out 0.024 (counts) and 0.025 (DFT + counts); leave-one-anion-out 0.051 and 0.046. A new anion doubles the error. The DFT descriptors help for [Tf2N], [BF4], [PF6], [TCB] and [NfO] but hurt for the small oxyanions ([MeSO4], [TFA], [MeSO3], [DEPO4], [MDEGSO4]) in both models; their r²SCAN-3c HOMO lies between −1.6 and +0.3 eV (unbound for [NO3]⁻), far from their 4–5 eV detachment energies. Step 2.3 tests whether diffuse-function orbitals fix this. Worst single ILs ([BBIM][MeSO3], [BMIM][NfO], [HOC2MIM][TFA], [HOC3MIM][NO3]) each come from one publication; error does not follow ion novelty (Spearman |ρ| ≤ 0.15).
+- Step 3.1 job ready: CREST 3.0.2 conformer search of all 83 ions, `calculations/conformers_crest/` (`scripts/make_conformer_search.py`). ORCA's GOAT was tried first and dropped: about 5 h on one core for [BMIM].
 
 ## Working rules
 
