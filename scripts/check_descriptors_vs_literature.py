@@ -8,8 +8,10 @@ Compares, ion by ion:
 
 Absolute values are not expected to agree (different functionals, gas phase versus
 continuum), so the check is on ordering (Spearman rank correlation) and on linearity
-(Pearson r). Two descriptor sets are checked:
+(Pearson r). Three descriptor sets are checked:
   current  data/processed/dft_descriptors_r2scan3c.csv  (corrected parser)
+  wb97xd3  data/processed/dft_descriptors_wb97xd3.csv   (wB97X-D3/def2-TZVPD single points on the
+           r2SCAN-3c geometries, roadmap step 2.3; used when the file exists, for the ions it holds)
   thesis   data/processed/orca_descriptors_individual.csv (values used to train the thesis model)
 
 Ions whose thesis values came from wrong-species calculations are excluded from the thesis set.
@@ -29,6 +31,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 CURRENT = ROOT / "data" / "processed" / "dft_descriptors_r2scan3c.csv"
+WB97X = ROOT / "data" / "processed" / "dft_descriptors_wb97xd3.csv"
 THESIS = ROOT / "data" / "processed" / "orca_descriptors_individual.csv"
 IONS = ROOT / "data" / "ions" / "ions_with_smiles.csv"
 REFS = ROOT / "data" / "literature_reference" / "reference_values.csv"
@@ -67,7 +70,9 @@ def main():
     gap = refs[(refs["category"] == "QM single ion") & (refs["quantity"] == "HOMO-LUMO gap")][["ion", "value"]]
     gap = gap.rename(columns={"value": "ref_gap_PBE_eV"})
 
-    ours = pd.concat([load_ours(CURRENT, "current"), load_ours(THESIS, "thesis")])
+    sets = ["current"] + (["wb97xd3"] if WB97X.exists() else []) + ["thesis"]
+    ours = pd.concat([load_ours(CURRENT, "current")] + ([load_ours(WB97X, "wb97xd3")] if WB97X.exists() else [])
+                     + [load_ours(THESIS, "thesis")])
     ours["type"] = ours["ion"].map(types)
     table = ours.merge(ie, on="ion", how="left").merge(gap, on="ion", how="left")
     table = table[table["ref_IE_eV"].notna() | table["ref_gap_PBE_eV"].notna()]
@@ -76,7 +81,7 @@ def main():
 
     print("Check of single-ion descriptors against literature (rank = Spearman, r = Pearson)\n")
     rows = []
-    for s in ("current", "thesis"):
+    for s in sets:
         for t in ("anion", "cation"):
             sub = table[(table["set"] == s) & (table["type"] == t)]
             a = sub.dropna(subset=["ref_IE_eV"])
@@ -86,22 +91,26 @@ def main():
             print(f"{s:8s} {t:7s}  -HOMO vs IE:  n={r1['n']:2d}  rank={r1['spearman']:+.2f}  r={r1['pearson']:+.2f}"
                   f"   |  gap vs PBE gap:  n={r2['n']:2d}  rank={r2['spearman']:+.2f}  r={r2['pearson']:+.2f}")
 
-    # Largest rank disagreements for the current anions
-    a = table[(table["set"] == "current") & (table["type"] == "anion")].dropna(subset=["ref_IE_eV"]).copy()
-    a["rank_ours"] = a["neg_HOMO_eV"].rank()
-    a["rank_ref"] = a["ref_IE_eV"].rank()
-    a["rank_shift"] = a["rank_ours"] - a["rank_ref"]
-    print("\nCurrent anions, ordered by published IE:")
-    print(a.sort_values("ref_IE_eV")[["ion", "ref_IE_eV", "neg_HOMO_eV", "rank_ref", "rank_ours", "rank_shift"]]
-          .to_string(index=False, float_format=lambda v: f"{v:.2f}"))
+    # Largest rank disagreements for the anions, per level
+    for s in [x for x in sets if x != "thesis"]:
+        a = table[(table["set"] == s) & (table["type"] == "anion")].dropna(subset=["ref_IE_eV"]).copy()
+        a["rank_ours"] = a["neg_HOMO_eV"].rank()
+        a["rank_ref"] = a["ref_IE_eV"].rank()
+        a["rank_shift"] = a["rank_ours"] - a["rank_ref"]
+        print(f"\n{s} anions, ordered by published IE:")
+        print(a.sort_values("ref_IE_eV")[["ion", "ref_IE_eV", "neg_HOMO_eV", "rank_ref", "rank_ours", "rank_shift"]]
+              .to_string(index=False, float_format=lambda v: f"{v:.2f}"))
 
     # Figure: -HOMO vs published IE, anions and cations, current and thesis sets
     fig, axes = plt.subplots(1, 2, figsize=(10, 4.2))
     for ax, t in zip(axes, ("anion", "cation")):
-        for s, m, c in (("thesis", "x", "#B5651D"), ("current", "o", "#1F6F78")):
+        styles = {"thesis": ("x", "#eb6834", "thesis"), "current": ("o", "#2a78d6", "r2SCAN-3c"),
+                  "wb97xd3": ("s", "#1baf7a", "wB97X-D3/def2-TZVPD")}
+        for s in [x for x in ("thesis", "current", "wb97xd3") if x in sets]:
+            m, c, lab = styles[s]
             sub = table[(table["set"] == s) & (table["type"] == t)].dropna(subset=["ref_IE_eV"])
-            ax.scatter(sub["ref_IE_eV"], sub["neg_HOMO_eV"], marker=m, color=c, label=s, s=36)
-            if s == "current":
+            ax.scatter(sub["ref_IE_eV"], sub["neg_HOMO_eV"], marker=m, color=c, label=lab, s=36)
+            if s == ("wb97xd3" if "wb97xd3" in sets else "current"):
                 for _, r in sub.iterrows():
                     ax.annotate(r["ion"].strip("[]"), (r["ref_IE_eV"], r["neg_HOMO_eV"]), fontsize=7,
                                 xytext=(3, 3), textcoords="offset points")
