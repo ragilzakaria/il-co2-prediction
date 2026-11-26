@@ -44,7 +44,7 @@ Goal: an **honest baseline**, using the same model type as the thesis but with c
 | 1.2 | Re-extract descriptors; literature check | Claude | **done**: anion HOMO rank ρ = 0.82 (thesis −0.25) |
 | 1.3 | Rebuild the training table with corrected descriptors | Claude | **done**: `final_referenced_model_dataset_r2scan3c.csv` |
 | 1.4 | Retrain with leave-IL-out and leave-anion-out validation; compare thesis descriptors, corrected descriptors, and T + P only | Claude (laptop) | **done** 25 Nov: `scripts/compare_descriptor_sets.py`, `paper/data/descriptor_comparison.csv` |
-| 1.5 | Update the manuscript with the honest numbers | Claude + you | **done** 25 Nov (d5a7281); open: source citation for rawdata.xlsx |
+| 1.5 | Update the manuscript with the honest numbers | Claude + you | **done** 25 Nov (d5a7281); rawdata.xlsx source identified and all dataset DOIs verified 26 Nov (`data/README.md`) |
 
 **Decision point A:** do the DFT descriptors beat T + P alone for unseen anions? If they barely do, that motivates Phase 3: better, more physical descriptors.
 

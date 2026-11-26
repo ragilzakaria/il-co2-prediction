@@ -26,7 +26,7 @@ SRC = {
                "10.1039/C3CP51682B", "ESI file IL-2013-set.xyz; ion identities assigned by graph matching"),
     "xtbdb": ("Stavarache, Calero, Vicent-Luna 2026, arXiv:2610.15190 (ionic-liquids-database v1.0)",
               "10.5281/zenodo.20539350", "CC0; lowest-energy of 10 DFT conformers per pair"),
-    "dos2025": ("Phys. Chem. Chem. Phys. 2025, 27, 9068 (IL density of states from lone-ion calculations)",
+    "dos2025": ("Fogarty et al. 2025, Phys. Chem. Chem. Phys. 27, 9068 (IL density of states from lone-ion calculations)",
                 "10.1039/D5CP00214A", "ESI Tables S12-S13"),
     "palomar2011": ("Palomar et al. 2011, Ind. Eng. Chem. Res. 50, 3452", "10.1021/ie101572m",
                     "SI Tables S3-S4"),

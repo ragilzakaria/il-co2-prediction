@@ -22,11 +22,13 @@ The project started as an undergraduate thesis (UGM Chemistry, 2026) and continu
 
 **QM protocol:** [docs/QM_PROTOCOL.md](docs/QM_PROTOCOL.md): r²SCAN-3c geometries, ωB97X-D3/def2-TZVPD single points (benchmarked against CCSD(T)).
 
+**Data sources:** [data/README.md](data/README.md): where every data file comes from and what to cite; all DOIs verified.
+
 ## Layout
 
 ```
 data/
-  raw/                    source data as received (rawdata.xlsx = thesis Tables S5/S6; ILThermo matches)
+  raw/                    source data as received (rawdata.xlsx = SI of Laakso et al. 2025; ILThermo matches)
   ions/                   ion master list: names, SMILES, atom counts (84 ions)
   processed/              current pipeline outputs: referenced dataset, descriptors, training table
   thesis/                 frozen thesis datasets (final_model_dataset_v3.csv = thesis training set)
