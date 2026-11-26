@@ -1,10 +1,11 @@
 """Roadmap step 1.4: do the corrected DFT descriptors help, especially for unseen anions?
 
-Trains a Random Forest and a histogram gradient-boosting model on the referenced dataset
-(12,297 points, 109 ILs) with six feature sets:
+Trains a Random Forest and a histogram gradient-boosting model on the curated dataset
+(data/processed/model_dataset_curated*.csv: 12,026 points, 110 ILs) with six feature sets:
 
   TP                   temperature and pressure only
-  TP+counts            + elemental atom counts of both ions (ion identity, no QM)
+  TP+counts            + elemental atom counts of both ions (ion identity, no QM; counted from
+                         the corrected structures, and used in every "+counts" set)
   TP+DFT_thesis        + the 10 thesis DFT descriptors (wrong HOMO lines, broken PF6, x-dipoles)
   TP+DFT_r2scan3c      + the 10 corrected r2SCAN-3c descriptors
   TP+DFT_thesis+counts       the thesis feature set
@@ -35,8 +36,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from check_validation import DFT, SEED, STATE, TARGET, cross_validate, load, splitters  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-THESIS = os.path.join(ROOT, "data", "processed", "final_referenced_model_dataset.csv")
-CORRECTED = os.path.join(ROOT, "data", "processed", "final_referenced_model_dataset_r2scan3c.csv")
+THESIS = os.path.join(ROOT, "data", "processed", "model_dataset_curated_thesisdesc.csv")
+CORRECTED = os.path.join(ROOT, "data", "processed", "model_dataset_curated.csv")
 OUT = os.path.join(ROOT, "paper", "data")
 FIG = os.path.join(ROOT, "images", "checks", "descriptor_comparison.png")
 
@@ -50,12 +51,12 @@ def model_fns():
 
 
 def main():
-    th, _, counts = load(THESIS)
-    co, _, _ = load(CORRECTED)
+    th, _, _ = load(THESIS)
+    co, _, counts = load(CORRECTED)
     keys = ["cation", "anion", "Temperature_K", "Pressure_kPa", TARGET]
     assert (th[keys].values == co[keys].values).all(), "the two tables must hold the same points in the same order"
 
-    df = th[keys + ["IL"] + counts].copy()
+    df = co[keys + ["IL"] + counts].copy()
     for c in DFT:
         df[f"{c}__thesis"] = th[c].to_numpy()
         df[f"{c}__r2scan3c"] = co[c].to_numpy()
@@ -111,7 +112,7 @@ def main():
     ax.set_xticklabels([s.replace("_", " ") for s in schemes])
     ax.set_ylabel("R² (mean of 5 folds)")
     ax.set_ylim(0, 1)
-    ax.set_title("Random Forest, referenced dataset: feature sets under four validation schemes")
+    ax.set_title("Random Forest, curated dataset: feature sets under four validation schemes")
     ax.legend(fontsize=7, ncol=3, frameon=False, loc="lower left")
     fig.tight_layout()
     os.makedirs(os.path.dirname(FIG), exist_ok=True)

@@ -2,15 +2,23 @@
 Merges the referenced NIST experimental dataset with per-ion DFT descriptors and elemental
 atom counts, producing the model-ready training table with full provenance.
 
-Two descriptor sets:
-  r2scan3c (default)  data/processed/dft_descriptors_r2scan3c.csv, corrected parser and the
-                      reruns of 25 Nov 2026  ->  data/processed/final_referenced_model_dataset_r2scan3c.csv
-  thesis              data/processed/orca_descriptors_individual.csv, the values the thesis model used
-                      ->  data/processed/final_referenced_model_dataset.csv (reproduces the existing file)
+Experimental data (--source):
+  curated (default)   data/processed/curated_co2_solubility_dataset.csv (scripts/build_curated_dataset.py),
+                      with atom counts of the corrected ion structures (data/ions/ion_atom_counts_r2scan3c.csv)
+  referenced          data/processed/referenced_co2_solubility_dataset.csv, the earlier build, with the
+                      thesis atom counts (reproduces the earlier files)
+Descriptors:
+  r2scan3c (default)  data/processed/dft_descriptors_r2scan3c.csv, corrected parser and the reruns
+  thesis (--thesis)   data/processed/orca_descriptors_individual.csv, the values the thesis model used
+
+Outputs:
+  curated:    data/processed/model_dataset_curated.csv, model_dataset_curated_thesisdesc.csv
+  referenced: data/processed/final_referenced_model_dataset_r2scan3c.csv, final_referenced_model_dataset.csv
 
 Usage, from the repository root:
-    python scripts/merge_referenced_model_dataset.py               # corrected descriptors
-    python scripts/merge_referenced_model_dataset.py --thesis      # thesis descriptors
+    python scripts/merge_referenced_model_dataset.py                       # curated, corrected descriptors
+    python scripts/merge_referenced_model_dataset.py --thesis              # curated, thesis descriptors
+    python scripts/merge_referenced_model_dataset.py --source referenced [--thesis]
 """
 
 import argparse
@@ -19,12 +27,16 @@ import pandas as pd
 import numpy as np
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
-EXP_FILE = os.path.join(DATA_DIR, "processed", "referenced_co2_solubility_dataset.csv")
+EXP_FILES = {"curated": os.path.join(DATA_DIR, "processed", "curated_co2_solubility_dataset.csv"),
+             "referenced": os.path.join(DATA_DIR, "processed", "referenced_co2_solubility_dataset.csv")}
 DESC_FILE_THESIS = os.path.join(DATA_DIR, "processed", "orca_descriptors_individual.csv")
 DESC_FILE = os.path.join(DATA_DIR, "processed", "dft_descriptors_r2scan3c.csv")
-ATOM_FILE = os.path.join(DATA_DIR, "ions", "ions_with_atomic_counts.csv")
-OUT_FILE_THESIS = os.path.join(DATA_DIR, "processed", "final_referenced_model_dataset.csv")
-OUT_FILE = os.path.join(DATA_DIR, "processed", "final_referenced_model_dataset_r2scan3c.csv")
+ATOM_FILES = {"curated": os.path.join(DATA_DIR, "ions", "ion_atom_counts_r2scan3c.csv"),
+              "referenced": os.path.join(DATA_DIR, "ions", "ions_with_atomic_counts.csv")}
+OUT_FILES = {("curated", False): os.path.join(DATA_DIR, "processed", "model_dataset_curated.csv"),
+             ("curated", True): os.path.join(DATA_DIR, "processed", "model_dataset_curated_thesisdesc.csv"),
+             ("referenced", False): os.path.join(DATA_DIR, "processed", "final_referenced_model_dataset_r2scan3c.csv"),
+             ("referenced", True): os.path.join(DATA_DIR, "processed", "final_referenced_model_dataset.csv")}
 DESCRIPTOR_COLUMNS = ["ion_abbreviation", "Energy_Hartree", "HOMO_Eh", "LUMO_Eh", "HOMO_LUMO_Gap_Eh",
                       "Dipole_Moment_Debye"]
 
@@ -34,13 +46,11 @@ def standardize_name(series):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--thesis", action="store_true", help="use the thesis descriptor file")
+    ap.add_argument("--source", choices=["curated", "referenced"], default="curated")
     args = ap.parse_args()
     desc_file = DESC_FILE_THESIS if args.thesis else DESC_FILE
-    out_file = OUT_FILE_THESIS if args.thesis else OUT_FILE
-
-    if not os.path.exists(EXP_FILE):
-        print(f"Experimental dataset not found yet: {EXP_FILE}")
-        return
+    out_file = OUT_FILES[(args.source, args.thesis)]
+    EXP_FILE, ATOM_FILE = EXP_FILES[args.source], ATOM_FILES[args.source]
 
     print("Loading datasets...")
     df_exp = pd.read_csv(EXP_FILE)
@@ -79,6 +89,7 @@ def main():
     # Drop temporary merge keys
     drop_temp = [c for c in ['cation_merge_key', 'anion_merge_key', 'merge_key_x', 'merge_key_y', 'cation_ion_abbreviation', 'anion_ion_abbreviation'] if c in df_final.columns]
     df_final.drop(columns=drop_temp, inplace=True)
+    unc = df_final.pop("solubility_uncertainty") if args.source == "curated" else None
     if args.thesis:
         df_final.fillna(0, inplace=True)  # thesis behaviour, kept so the old file is reproduced
     else:
@@ -89,9 +100,12 @@ def main():
             raise SystemExit(f"Missing descriptors for {missing.sum()} rows, pairs: {bad}")
         df_final.fillna(0, inplace=True)  # atom counts only
 
+    if unc is not None:
+        df_final["solubility_uncertainty"] = unc  # unknown stays empty, not 0
+
     # 5. Organize column order
     id_cols = ['cation', 'cation_ion_name', 'anion', 'anion_ion_name']
-    ref_cols = [c for c in ['entry_id', 'ref_year', 'ref_citation', 'ref_title', 'ref_doi', 'exp_method', 'solubility_uncertainty'] if c in df_final.columns]
+    ref_cols = [c for c in ['set_id', 'entry_id', 'pressure_kind', 'original_unit', 'ref_year', 'ref_citation', 'ref_title', 'ref_doi', 'exp_method', 'solubility_uncertainty'] if c in df_final.columns]
     atom_count_cols = sorted([col for col in df_final.columns if 'num_' in col])
     condition_cols = ['Temperature_K', 'Pressure_kPa']
     descriptor_cols = sorted([col for col in df_final.columns if col.endswith(('_Eh', '_Debye', '_au', '_A3', '_Hartree', '_Gap_Eh'))])

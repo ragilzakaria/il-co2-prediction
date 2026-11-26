@@ -38,6 +38,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "processed" / "referenced_co2_solubility_dataset.csv"
+CURATED = ROOT / "data" / "processed" / "curated_co2_solubility_dataset.csv"
 OUT = ROOT / "data" / "references" / "doi_verification.csv"
 CACHE = ROOT / "data" / "references" / ".crossref_cache.json"
 # Checked by hand where the ILThermo record itself is wrong or the work has no Crossref DOI.
@@ -145,6 +146,10 @@ def agrees(item, title, year, surname, citation):
 
 def main():
     df = pd.read_csv(DATA)
+    if CURATED.exists():  # publications that only the curated (strict ILThermo) build contains
+        cur = pd.read_csv(CURATED).rename(columns={"set_id": "entry_id"})
+        extra = cur[~cur.ref_citation.isin(df.ref_citation)].assign(ref_doi=None)
+        df = pd.concat([df, extra[df.columns.intersection(extra.columns)]], ignore_index=True)
     pubs = (df.groupby(["ref_citation", "ref_title", "ref_year"], dropna=False)
               .agg(doi_stored=("ref_doi", "first"), n_points=("entry_id", "size"),
                    ils=("cation", lambda s: len(set(zip(s, df.loc[s.index, "anion"])))))

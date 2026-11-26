@@ -62,6 +62,18 @@ Goal: an **honest baseline**, using the same model type as the thesis but with c
 - The isolated-ion DFT descriptors are **no better than simple atom counts.** At this level they mostly encode ion size and identity.
 - **Conclusion: go ahead with Phase 3 and Phase 4.** Getting beyond atom counts needs liquid-level physics: COSMO-RS, ion-pair and anion–CO₂ binding, and MD.
 
+**Update (26 Nov 2026), on the curated dataset** (12,026 points, 110 ILs; rebuilt from the raw ILThermo records, inconsistent publications removed, atom counts from the corrected structures):
+
+| Features | R² |
+|---|---|
+| T + P only | 0.77 / 0.80 |
+| + thesis DFT descriptors | 0.84 / 0.89 (SD 0.07–0.11) |
+| + corrected DFT descriptors | **0.90 / 0.93** (SD ≈ 0.02) |
+| + atom counts only (no QM) | 0.87 / 0.91 |
+| + corrected DFT + atom counts | 0.89 / 0.92 |
+
+- On the clean data the corrected descriptors are **slightly better than atom counts** (better in 4 of 5 folds for both models, by 0.02 on average). The conclusion stands: the gain from isolated-ion DFT is small, and Phases 3–4 are still the way forward.
+
 ## Phase 2: choose and validate the QM method (now, about 1–2 weeks)
 
 Goal: a QM protocol that is **proven** against high-level references before it is used on everything.
