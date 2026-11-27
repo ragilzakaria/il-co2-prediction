@@ -106,6 +106,65 @@ energy mostly follows the size of the anion (rank correlation with the number of
 −0.56 at r²SCAN-3c). It is still useful to the model (section 6), but read it as a size-like number,
 not as chemistry.
 
+**COSMO-RS (roadmap step 3.4, `scripts/cosmors_henry.py`, `calculations/cosmors/`).** openCOSMO-RS
+as built into ORCA 6.1.1: BP86/def2-TZVPD gas-phase and CPCM single points on the r²SCAN-3c
+geometries (`! COSMORS(...)`, laptop, about 1 min per ion), then the program `openCOSMORS`, which
+only the Mahameru build has (well under a second per run, login node). The IL is the solvent as
+cation + anion in one pseudo-molecule (Palomar's [C+A] model; the anion is moved 100 Å away, because
+openCOSMORS gives solvation free energies only for a pure solvent). CO₂ Henry constant
+K_H = RT/V_m · exp(ΔG_solv/RT), with ΔG_solv (1 mol/L → 1 mol/L) and the molar volume V_m from
+openCOSMO-RS's own volume model (within a few percent of measured IL molar volumes). Check against
+the 18 ILs of Palomar et al., *Ind. Eng. Chem. Res.* **50**, 3452 (2011)
+(`calculations/cosmors/palomar_comparison.csv`):
+
+| | K_H / experiment (mean) | SD of ln ratio | Spearman with experiment |
+|---|---|---|---|
+| openCOSMO-RS, [C+A] (this work) | 2.14 | 0.20 | 0.89 |
+| COSMOtherm, [C+A] (Palomar) | 1.29 | 0.21 | 0.87 |
+| COSMOtherm, ion pair [CA] (Palomar) | 1.47 | 0.17 | 0.90 |
+
+The ranking and scatter match the commercial program; the Henry constants are about twice too high
+across the board (ΔG_solv of CO₂ about 0.45 kcal/mol too positive; CO₂ in water is off in the same
+direction, +1.0 against +0.1 kcal/mol). For ML features the constant factor does not matter; as a
+physics baseline, report it or remove it with one fitted shift.
+
+All 110 training pairs (`calculations/cosmors/henry.csv`), against the apparent Henry constant P/x of
+the dataset points up to 1 MPa at 293–303 K (median per IL; `dataset_comparison.csv`):
+
+| ILs with at least | n | K_H / (P/x) (mean) | SD of ln ratio | Spearman |
+|---|---|---|---|---|
+| 1 point | 84 | 2.00 | 0.36 | 0.74 |
+| 5 points | 54 | 1.93 | 0.26 | 0.86 |
+| 10 points | 30 | 1.89 | 0.21 | 0.89 |
+
+The same factor of 2 as against Palomar; the extra scatter comes from ILs with one or two points.
+
+- **25 °C only.** The ΔG_solv model of openCOSMO-RS has temperature-independent fitted energy terms
+  (parametrised at 25 °C), and its temperature dependence for CO₂ has the wrong sign: on a 273–373 K
+  grid, K_H of [BMIM][PF6] fell from 20.8 to 5.0 MPa, while the measured P/x rises from 4.2 to
+  12.5 MPa. Use K_H at 298.15 K as a per-IL feature and leave temperature to the model.
+- Current ion structures (not yet the step-3.2 conformers); rerun when those exist.
+
+**K_H as a model feature** (`scripts/check_cosmors_feature.py`; gradient boosting, leave-one-anion-out
+on the curated set; null = ln K_H shuffled among the 110 ILs). Pooled MAE in x(CO₂):
+
+| Features | without K_H | with ln K_H | with shuffled ln K_H (mean, range) |
+|---|---|---|---|
+| T, P, atom counts | 0.0509 | **0.0428** | 0.0521 (0.0504–0.0544, 20 draws) |
+| + 10 ωB97X-D3 ion descriptors | 0.0444 | **0.0422** | 0.0463 (0.0447–0.0511, 10 draws) |
+
+The real K_H beats every shuffled draw in both cases. With counts it is as useful as all ten ωB97X-D3
+descriptors; on top of them it still helps, less. Per anion (`paper/data/cosmors_feature_summary.csv`,
+outside the 5–95 % null band), with the ωB97X-D3 descriptors:
+- better: [Tf2N], [DCA], [TCB], [TfO], [SCN], [DMPO4] and [MDEGSO4] (0.140 → 0.119; K_H partly
+  corrects the out-of-range anion LUMO, section 6);
+- worse: [MeSO4], [MeSO3], [NO3] (+0.009 to +0.014).
+
+Likely reason for the small oxyanions: the over-prediction factor of openCOSMO-RS depends on the anion
+(median K_H / (P/x) for ILs with ≥ 5 points: [SCN] 1.2, [MeSO4] 1.3, [DMPO4] 1.4 against 1.9–2.4
+for [Tf2N], [PF6], [BF4], [DCA], [C(CN)3]), so for these anions it predicts too high a solubility
+relative to the training anions (few ILs per anion; a hypothesis, not tested).
+
 ## 5. Checks before a number is used
 
 1. Optimisation converged (`THE OPTIMIZATION HAS CONVERGED`) and `ORCA TERMINATED NORMALLY`.
