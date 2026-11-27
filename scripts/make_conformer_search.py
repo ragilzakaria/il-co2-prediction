@@ -20,8 +20,8 @@ Output: calculations/conformers_crest/inputs/<ion>.xyz, calculations/conformers_
         (file, charge, n_atoms, crest_flags), calculations/conformers_crest/jobs.txt (for submit.sh)
 
 CREST settings: the default iMTD-GC search for ions up to 50 atoms; the --quick search (fewer and
-shorter metadynamics runs) for the six larger ions, whose default search would not fit the 23 h
-limit of the short partition.
+shorter metadynamics runs) for the six larger ions. Runs on the medium-small partition (3 days):
+on short (23 h) the first job finished only 4 ions, and [C12MIM] alone took about 16 h.
 
 Run from the repository root:
     python scripts/make_conformer_search.py

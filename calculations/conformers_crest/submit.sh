@@ -8,18 +8,20 @@
 #   <ion>.crest.out          CREST log
 #   <ion>.best.xyz           lowest conformer (crest_best.xyz)
 #   <ion>.conformers.xyz     all conformers within 6 kcal/mol (crest_conformers.xyz)
-# Finished ions are skipped, so if the job hits its time limit, submit it again.
+# Finished ions are skipped, so if the job hits its time limit, submit it again. Partition
+# medium-small (3 days): the first job (576149) on short (23 h) finished only 4 of 83 ions, and an
+# ion cut off by the time limit starts again from zero.
 #
 # Usage on the login node, in this folder (it must contain inputs/ and jobs.txt):
 #   sbatch submit.sh
 #
 #SBATCH --job-name=crest
-#SBATCH --partition=short
+#SBATCH --partition=medium-small
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=32G
-#SBATCH --time=23:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --output=%x_%j.log
 
 export CREST="$HOME/software/crest-3.0.2/crest/crest"

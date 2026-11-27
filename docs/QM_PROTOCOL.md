@@ -23,7 +23,8 @@ Flexible ions (alkyl chains, ether and hydroxy groups) are not used in the shape
 happened to give. For every ion:
 
 1. **Search:** CREST 3.0.2 (iMTD-GC, GFN2-xTB, gas phase), from the current r²SCAN-3c structure;
-   `--quick` for ions above 50 atoms. Job: `calculations/conformers_crest/`.
+   `--quick` for ions above 50 atoms. Job: `calculations/conformers_crest/`, on the 3-day partition
+   (16 h for [C12MIM], 49 atoms, on 4 threads; more than 19 h for [P6,6,6,14] and [N1,8,8,8]).
 2. **Re-rank:** r²SCAN-3c optimisation of the current structure plus up to 5 CREST conformers within
    3 kcal/mol (GFN2-xTB), duplicates removed (within 0.1 kcal/mol and 0.3 Å heavy-atom RMSD, mirror
    images included). The lowest at the r²SCAN-3c level is kept, so the result can never be worse
