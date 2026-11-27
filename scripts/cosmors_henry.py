@@ -124,8 +124,9 @@ def read_cosmo(path):
                 diel=hval("CPCM dielectric energy"), one_el=hval("One-electron operator energy"))
 
 
-def qspr_volume(m, rav=0.5):
-    """Molar volume at 25 C (cm3/mol), as in openCOSMO-RS_cpp averageAndClusterSegments."""
+def averaged_sigma(m, rav=0.5):
+    """Segment areas (A^2) and screening charge densities sigma (e/A^2) after the Gaussian averaging of
+    COSMO-RS over radius rav (A), as in openCOSMO-RS_cpp averageAndClusterSegments."""
     import numpy as np
     pos = np.array([[float(x) for x in s[:3]] for s in m["surf"]]) * BOHR
     area = np.array([float(s[3]) for s in m["surf"]]) * BOHR ** 2
@@ -137,6 +138,12 @@ def qspr_volume(m, rav=0.5):
         d2 = ((pos - pos[i]) ** 2).sum(1)
         w = (r2 * rav * rav / t) * np.exp(-d2 / t)
         avg[i] = (sig * w).sum() / w.sum()
+    return area, avg
+
+
+def qspr_volume(m, rav=0.5):
+    """Molar volume at 25 C (cm3/mol), as in openCOSMO-RS_cpp averageAndClusterSegments."""
+    area, avg = averaged_sigma(m, rav)
     m2 = (avg ** 2 * area).sum() * 1e4
     m4 = (avg ** 4 * area).sum() * 1e8
     n_si = sum(1 for l in m["atoms"] if l.split()[-1] == "14")

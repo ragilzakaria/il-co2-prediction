@@ -165,6 +165,28 @@ Likely reason for the small oxyanions: the over-prediction factor of openCOSMO-R
 for [Tf2N], [PF6], [BF4], [DCA], [C(CN)3]), so for these anions it predicts too high a solubility
 relative to the training anions (few ILs per anion; a hypothesis, not tested).
 
+**σ-moments as features** (`scripts/cosmors_sigma_moments.py` → `calculations/cosmors/sigma_moments.csv`;
+test `scripts/check_sigma_moments_feature.py`). Seven moments per ion from the averaged σ (0.5 Å),
+σ in e/nm²: area, volume, M2, M3, M4, H-bond acceptor and donor moments (σ_hb = 0.85 e/nm²), 14 columns
+per IL. Check: the anion acceptor moment ranks [PF6] (3.8) < [Tf2N] (11.8) < [BF4] (23) < [TfO] (25) <
+[DCA] (32) < [MeSO4] (37) < [DMPO4], [MeSO3] (47), the known order of anion basicity (Kamlet–Taft β);
+hydroxyl-functionalised cations have the largest donor moments. Null: σ-moment vectors shuffled among
+ions of the same kind. Pooled leave-one-anion-out MAE in x(CO₂):
+
+| Base features | base | + σ-moments | + shuffled σ-moments (mean, range) |
+|---|---|---|---|
+| T, P, atom counts | 0.0509 | **0.0380** | 0.0571 (0.0490–0.0649, 20 draws) |
+| + ωB97X-D3 descriptors | 0.0444 | **0.0371** | 0.0493 (0.0452–0.0564, 10 draws) |
+| + ωB97X-D3 + ln K_H | 0.0422 | **0.0377** | 0.0460 (0.0385–0.0613, 10 draws) |
+
+The σ-moments are the strongest QM features so far: better than every shuffled draw on all three bases,
+and with counts alone (0.0380) about as good as with ωB97X-D3 (0.0371) or with ωB97X-D3 and K_H
+(0.0377); these three differ by less than 0.001, which one fit per set does not resolve. ln K_H adds
+nothing once the σ-moments are in (it is computed from the same σ-profiles). Per anion (outside the
+5–95 % null band, base ωB97X-D3): better for [Tf2N], [TfO], [DCA], [TCB], [BETA], [MeSO3] and
+[MDEGSO4] (0.140 → 0.089); worse for [TFA] (+0.023), [PF6] (+0.016), [NfO] and [HSO4] (3 points).
+[TFA] is worse on every base.
+
 ## 5. Checks before a number is used
 
 1. Optimisation converged (`THE OPTIMIZATION HAS CONVERGED`) and `ORCA TERMINATED NORMALLY`.
