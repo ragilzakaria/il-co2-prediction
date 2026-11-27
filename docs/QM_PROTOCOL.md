@@ -179,10 +179,27 @@ ions of the same kind. Pooled leave-one-anion-out MAE in x(CO₂):
 | + ωB97X-D3 descriptors | 0.0444 | **0.0371** | 0.0493 (0.0452–0.0564, 10 draws) |
 | + ωB97X-D3 + ln K_H | 0.0422 | **0.0377** | 0.0460 (0.0385–0.0613, 10 draws) |
 
-The σ-moments are the strongest QM features so far: better than every shuffled draw on all three bases,
-and with counts alone (0.0380) about as good as with ωB97X-D3 (0.0371) or with ωB97X-D3 and K_H
-(0.0377); these three differ by less than 0.001, which one fit per set does not resolve. ln K_H adds
-nothing once the σ-moments are in (it is computed from the same σ-profiles). Per anion (outside the
+The σ-moments are the strongest QM features so far: better than every shuffled draw on all three bases.
+
+Seed-to-seed spread (`scripts/check_seed_spread.py`, `paper/data/seed_spread.csv`; the real sets refitted
+with 5 seeds of gradient boosting, which changes the early-stopping split), pooled MAE, mean ± SD:
+
+| Features | MAE |
+|---|---|
+| counts | 0.0506 ± 0.0003 |
+| counts + ln K_H | 0.0420 ± 0.0005 |
+| ωB97X-D3 | 0.0440 ± 0.0004 |
+| ωB97X-D3 + ln K_H | 0.0422 ± 0.0007 |
+| counts + σ | 0.0384 ± 0.0005 |
+| **ωB97X-D3 + σ** | **0.0376 ± 0.0004** |
+| ωB97X-D3 + ln K_H + σ | 0.0377 ± 0.0003 |
+
+Seed spread is 0.0003–0.0007, so the gains above are far outside it. Paired by seed: ωB97X-D3 + σ beats
+counts + σ with every seed (by 0.0004–0.0012), so the ωB97X-D3 descriptors still add a little (about 2 %);
+ln K_H on top of ωB97X-D3 + σ changes the MAE by −0.0006 to +0.0006 (nothing; it is computed from the
+same σ-profiles); and with ln K_H in, the ωB97X-D3 descriptors add nothing (0.0420 against 0.0422).
+Feature choice: σ-moments + ωB97X-D3 + counts; counts + σ-moments is the cheap alternative (only the
+BP86 COSMO step per ion). K_H stays a physics baseline, not a feature. Per anion (outside the
 5–95 % null band, base ωB97X-D3): better for [Tf2N], [TfO], [DCA], [TCB], [BETA], [MeSO3] and
 [MDEGSO4] (0.140 → 0.089); worse for [TFA] (+0.023), [PF6] (+0.016), [NfO] and [HSO4] (3 points).
 [TFA] is worse on every base.
