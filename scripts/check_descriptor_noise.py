@@ -22,6 +22,8 @@ Output: paper/data/descriptor_noise_null.csv      MAE per anion for every null d
 Run from the repository root (about 45 min with the default 20 draws):
     python scripts/check_descriptor_noise.py [--draws N]
     python scripts/check_descriptor_noise.py --plot-only    # redraw the figure from the summary CSV
+    python scripts/check_descriptor_noise.py --add-wb97xd3  # place the wB97X-D3 result of
+        scripts/compare_orbital_levels.py (same model and folds) against the saved null draws
 """
 import os
 import sys
@@ -73,7 +75,38 @@ def shuffled(df, rng):
     return pd.DataFrame(out, index=df.index)
 
 
+def add_wb97xd3():
+    """Add the wB97X-D3 per-anion effect from paper/data/orbital_level_per_anion.csv (GB rows) to the
+    summary, using the saved null draws; no refitting of the null models."""
+    s = pd.read_csv(os.path.join(OUT, "descriptor_noise_summary.csv")).set_index("anion")
+    null = pd.read_csv(os.path.join(OUT, "descriptor_noise_null.csv"))
+    lev = pd.read_csv(os.path.join(OUT, "orbital_level_per_anion.csv"))
+    lev = lev[lev.model == "GB"].set_index("anion")
+    # same deterministic model and folds: the counts and r2SCAN-3c errors must agree
+    assert (lev.counts - s.MAE_counts).abs().max() < 1e-3, "counts baseline differs"
+    assert (lev.r2scan3c - s.MAE_counts - s.effect_r2scan3c).abs().max() < 1e-3, "r2SCAN-3c result differs"
+    eff_null = null.pivot(index="draw", columns="anion", values="MAE") - s.MAE_counts
+    s["effect_wb97xd3"] = lev.wb97xd3 - s.MAE_counts
+    for a in s.index:
+        e, eff = eff_null[a], s.at[a, "effect_wb97xd3"]
+        s.at[a, "p_wb97xd3"] = (np.abs(e - e.mean()) >= abs(eff - e.mean())).mean()
+        s.at[a, "outside_null_wb97xd3"] = not (e.quantile(0.05) <= eff <= e.quantile(0.95))
+    s = s.reset_index()
+    s.to_csv(os.path.join(OUT, "descriptor_noise_summary.csv"), index=False, float_format="%.4f")
+    plot(s, ["r2scan3c", "wb97xd3"], null.draw.nunique())
+    cols = ["anion", "n_points", "null_mean_effect", "null_p05", "null_p95", "effect_r2scan3c",
+            "outside_null_r2scan3c", "effect_wb97xd3", "outside_null_wb97xd3"]
+    print(s[cols].round(3).to_string(index=False))
+    for l in ("r2scan3c", "wb97xd3"):
+        below = (s[f"effect_{l}"] < s.null_p05).sum()
+        above = (s[f"effect_{l}"] > s.null_p95).sum()
+        print(f"{l}: better than the noise band for {below} anions, worse for {above}, of {len(s)}")
+
+
 def main():
+    if "--add-wb97xd3" in sys.argv:
+        add_wb97xd3()
+        return
     if "--plot-only" in sys.argv:
         s = pd.read_csv(os.path.join(OUT, "descriptor_noise_summary.csv"))
         n = pd.read_csv(os.path.join(OUT, "descriptor_noise_null.csv")).draw.nunique()

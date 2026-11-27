@@ -81,9 +81,9 @@ Goal: a QM protocol that is **proven** against high-level references before it i
 | Step | What | Check against | Status |
 |---|---|---|---|
 | 2.1 | Ion-pair benchmark: 66 published structures, r²SCAN-3c and ωB97X-D3/def2-TZVPD (± counterpoise) | CCSD(T) values from Karu 2018 and IL-2013. Target: mean absolute deviation < 5 kJ/mol | **done** 26 Nov: `calculations/benchmark_ion_pairs/RESULTS.md` |
-| 2.2 | Test parallel ORCA on Mahameru (`openmpi4/4.1.4`, `%pal`) | speed-up versus one core | to do |
-| 2.3 | Anion orbitals with diffuse functions (ωB97X-D3/def2-TZVPD single points) | published ionisation energies (rank order) | to do |
-| 2.4 | Write the protocol down (`docs/QM_PROTOCOL.md`) | — | drafted 26 Nov; finish after 2.2–2.3 |
+| 2.2 | Test parallel ORCA on Mahameru (`openmpi4/4.1.4`, `%pal`) | speed-up versus one core | **done** 26 Nov: 3.6–3.8× on 4 cores, 11–13× on 16 |
+| 2.3 | Anion orbitals with diffuse functions (ωB97X-D3/def2-TZVPD single points) | published ionisation energies (rank order) | **done** 26 Nov: anion rank correlation 0.96 (r²SCAN-3c 0.82) |
+| 2.4 | Write the protocol down (`docs/QM_PROTOCOL.md`) | — | **done** 26 Nov |
 
 **Decision point B:** which method to use for energies and for orbitals.
 
@@ -145,6 +145,7 @@ GROMACS 2023.3 is installed on Mahameru. Still to check: whether GPU nodes are a
 - Validation: leave-IL-out and leave-anion-out only, with errors reported per family.
 - Models: Gaussian-process and boosted-tree ensembles that give **error bars**. Graph neural networks if time allows.
 - Physics: solubility rises with pressure and follows Henry's law at low pressure.
+- **Training-range check:** flag any new ion whose descriptors lie outside the range of the training ions (tree models cannot extrapolate; [MDEGSO4] with the ωB97X-D3 LUMO is the worked example).
 - **Active learning:** the model's uncertainty picks the next ions to compute (Phases 3–4), and the results go back into the model.
 
 ## Phase 6: paper and pipeline
@@ -154,15 +155,17 @@ GROMACS 2023.3 is installed on Mahameru. Still to check: whether GPU nodes are a
 
 ---
 
-## Where things stand (26 Nov 2026)
+## Where things stand (27 Nov 2026)
 
 - **Phase 1 done** (25 Nov): all 9 ions fixed, descriptors re-extracted, corrected training table built, grouped comparison run (decision A answered), manuscript updated.
 - **Phase 2.1 done** (26 Nov): ion-pair benchmark finished (HPC job 575850); decision B answered. Protocol drafted in `docs/QM_PROTOCOL.md`.
 - Frequency checks for [N1,8,8,8], [P6,6,6,14] and [oleyl-MIM] done on Mahameru (batch02): all 83 computed ions are verified minima.
-- Steps 2.2 and 2.3 running on Mahameru (job 576022, started 26 Nov 13:10). First result: parallel ORCA works with `openmpi4/4.1.4` ([Tf2N] single point 798 s on 1 core, 222 s on 4, 70 s on 16).
+- **Phase 2 done** (26 Nov, job 576022): parallel ORCA works with `openmpi4/4.1.4` (11–13× on 16 cores); ωB97X-D3/def2-TZVPD single points of all 83 ions (`data/processed/dft_descriptors_wb97xd3.csv`). Anion −HOMO against published ionisation energies: rank correlation 0.96 (r²SCAN-3c 0.82), every anion HOMO bound; cations 0.77 at both levels (weak test: four imidazolium IEs within 0.03 eV). Protocol finished in `docs/QM_PROTOCOL.md`.
+- ωB97X-D3 descriptors in the model (`scripts/compare_orbital_levels.py`, `scripts/check_descriptor_noise.py --add-wb97xd3`; leave-one-anion-out MAE in x(CO₂)): gradient boosting 0.0509 (counts), 0.0455 (r²SCAN-3c), **0.0444** (ωB97X-D3); random forest 0.0603, 0.0561, 0.0520. The oxyanion penalty is gone ([MeSO4] +0.035 → +0.009, [TFA] +0.027 → +0.009, now inside the noise band), but they do not become better than noise. Better than noise: [Tf2N], [BETA], [NfO], [PF6], [FSA]. One anion much worse: [MDEGSO4] (+0.008 → +0.107). Cause (`scripts/check_anion_lumo.py`): its ωB97X-D3 LUMO is the lowest of all anions, outside the training range, so the trees treat it like the high-solubility fluorinated anions; the anion LUMO with a diffuse basis mostly follows anion size. Dropping the anion LUMO and gap makes the pooled error worse (0.0468; [PF6], [Tf2N] and [FSA] lose most of their gain, [TFA] is worse than noise again), so all 10 ωB97X-D3 descriptors are kept and Phase 5 needs a training-range check for new ions (`docs/QM_PROTOCOL.md` section 6).
 - Step 3.2 job ready: `scripts/make_conformer_reopt.py` + `calculations/conformers_r2scan3c/submit.sh` (r²SCAN-3c optimisation of the current structure and up to 5 CREST conformers per ion, keep the lowest, frequencies). Tested locally on [BMIM] with a short CREST run: a CREST conformer came out 1.0 kcal/mol below the current structure. Run once CREST job 576149 is back. Conformer procedure in `docs/QM_PROTOCOL.md` section 2.
-- Per-IL errors on the curated set (`scripts/per_il_errors.py`, 26 Nov; tables `paper/data/per_*_errors_curated.csv`, figure `images/checks/per_il_errors.png`). Gradient boosting, MAE in x(CO₂): leave-one-IL-out 0.024 (counts) and 0.025 (DFT + counts); leave-one-anion-out 0.051 and 0.046. A new anion doubles the error. Null test (`scripts/check_descriptor_noise.py`: the same descriptors shuffled among the ions, 20 times) shows that adding *any* 10 ion-level numbers makes new-anion predictions worse on average (MAE 0.059 against 0.051 for counts), while the real r²SCAN-3c descriptors make them better (0.046, better than all 20 shuffles). Per anion, the real gain lies outside the shuffled range for [Tf2N], [BETA], [TCB], [DCA], [NfO] and [methide]; for the small oxyanions ([MeSO4], [NO3], [MeSO3], [DEPO4]) the descriptors behave like random numbers (no information, not real harm), except [TFA], which is really worse. Step 2.3 tests whether ωB97X-D3 orbitals carry information for these anions. Worst single ILs ([BBIM][MeSO3], [BMIM][NfO], [HOC2MIM][TFA], [HOC3MIM][NO3]) each come from one publication; error does not follow ion novelty (Spearman |ρ| ≤ 0.15).
-- Step 3.1 job ready: CREST 3.0.2 conformer search of all 83 ions, `calculations/conformers_crest/` (`scripts/make_conformer_search.py`). ORCA's GOAT was tried first and dropped: about 5 h on one core for [BMIM].
+- Per-IL errors on the curated set (`scripts/per_il_errors.py`, 26 Nov; tables `paper/data/per_*_errors_curated.csv`, figure `images/checks/per_il_errors.png`). Gradient boosting, MAE in x(CO₂): leave-one-IL-out 0.024 (counts) and 0.025 (DFT + counts); leave-one-anion-out 0.051 and 0.046. A new anion doubles the error. Null test (`scripts/check_descriptor_noise.py`: the same descriptors shuffled among the ions, 20 times) shows that adding *any* 10 ion-level numbers makes new-anion predictions worse on average (MAE 0.059 against 0.051 for counts), while the real r²SCAN-3c descriptors make them better (0.046, better than all 20 shuffles). Per anion, the real gain lies outside the shuffled range for [Tf2N], [BETA], [TCB], [DCA], [NfO] and [methide]; for the small oxyanions ([MeSO4], [NO3], [MeSO3], [DEPO4]) the descriptors behave like random numbers (no information, not real harm), except [TFA], which is really worse. With ωB97X-D3 orbitals (bullet above) the [TFA] and oxyanion penalty disappears. Worst single ILs ([BBIM][MeSO3], [BMIM][NfO], [HOC2MIM][TFA], [HOC3MIM][NO3]) each come from one publication; error does not follow ion novelty (Spearman |ρ| ≤ 0.15).
+- Step 3.5 job ready and tested (27 Nov): `scripts/make_ion_pairs.py` + `calculations/ion_pairs/` (110 ion pairs, 23 anion–CO₂ complexes; GFN2-xTB from about 22 starts, r²SCAN-3c on the 3 lowest distinct, ωB97X-D3 single points). Laptop test on [EMIM][BF4], [EMIM][DCA] and [BF4]⁻·CO₂ (`calculations/ion_pairs/test_laptop/README.md`): −378.2 and −363.0 kJ/mol against CCSD(T) −378.7 and −368.2. The test found a bug in the duplicate check (three copies of one structure went to r²SCAN-3c, giving −371.7 for [EMIM][BF4]); fixed and confirmed. Waits for a free HPC slot (CREST 576149 still running).
+- Step 3.1 running: CREST 576149 (started 26 Nov 17:44): 3 of 83 ions done after 13 h, the largest ions first, 4 at a time. It will probably hit the 23 h limit; ions cut off restart from zero, so give [P6,6,6,14] and [N1,8,8,8] their own job if they are among them. CREST 3.0.2 conformer search of all 83 ions, `calculations/conformers_crest/` (`scripts/make_conformer_search.py`). ORCA's GOAT was tried first and dropped: about 5 h on one core for [BMIM].
 
 ## Working rules
 
